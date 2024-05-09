@@ -7,9 +7,12 @@ class Slider:
     def __init__(self, length, from_, to, x, y ):
         self.slide = pygame.Rect(x, y, 5, length)
         self.knob = pygame.Rect(x-2, y, 10, 5)
+        self.length=length
         self.from_=from_
         self.to=to
+
     def draw(self, screen, font):
+
         pygame.draw.rect(screen, (0,0,255), self.slide)
         pygame.draw.rect(screen, (255,0,0), self.knob)
         pos = pygame.mouse.get_pos()

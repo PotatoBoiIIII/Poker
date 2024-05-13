@@ -4,6 +4,7 @@ import slider
 import card
 import random
 import player as pl
+import math
 
 pygame.font.init()
 
@@ -13,15 +14,16 @@ WIDTH = 900
 HEIGHT= 500
 GREEN=(88, 175, 54)
 WHITE=(255,255,255)
+BLUE=(0, 30, 230)
 ARROW_WIDTH=13*6
 ARROW_HEIGHT=20*6
 MODE_WIDTH=40*6
 MODE_HEIGHT=20*6
 HOME_WIDTH=20*3
-BOT_CARD_WIDTH=27*3
-BOT_CARD_HEIGHT=38*3
-PLAYER_CARD_WIDTH=27*4
-PLAYER_CARD_HEIGHT=38*4
+BOT_CARD_WIDTH=27*2
+BOT_CARD_HEIGHT=38*2
+PLAYER_CARD_WIDTH=27*3
+PLAYER_CARD_HEIGHT=38*3
 ACTION_WIDTH=60
 ACTION_HEIGHT=30
 PLAYER_TAG_WIDTH=60
@@ -60,17 +62,20 @@ btn_Easy=button.Button(int(WIDTH/2-Easy_img.get_width()/2), int(HEIGHT/2-Easy_im
 btn_Medium=button.Button(int(WIDTH/2-Easy_img.get_width()/2), int(HEIGHT/2-Easy_img.get_height()/2), Medium_img)
 btn_Hard=button.Button(int(WIDTH/2-Easy_img.get_width()/2), int(HEIGHT/2-Easy_img.get_height()/2), Hard_img)
 
-btn_Fold=button.Button(340,440, Fold_img)
-btn_Check=button.Button(410, 440, Check_img)
-btn_Call=button.Button(410,440,Call_img)
-btn_Raise=button.Button(480, 440, Raise_img)
-btn_Raise2=button.Button(480, 440, Raise_img)
+btn_Fold=button.Button(350,450, Fold_img)
+btn_Check=button.Button(420, 450, Check_img)
+btn_Call=button.Button(420,450,Call_img)
+btn_Raise=button.Button(490, 450, Raise_img)
+
 
 #GameplayButtons
 btn_Home=button.Button(20,20, Home_img)
 
 #Fonts
-POT_FONT=pygame.font.SysFont("comicsans", 40)
+POT_FONT=pygame.font.SysFont("comicsans", 30)
+PLAYER_MONEY_FONT = pygame.font.SysFont("arial", 20)
+PLAYER_MOVE_FONT = pygame.font.SysFont("calibri", 20)
+WINNER_FONT = pygame.font.SysFont("calibri", 40)
 
 #Card deck:
 SA= pygame.transform.scale(pygame.image.load("cards/AS.png"), (BOT_CARD_WIDTH, BOT_CARD_HEIGHT))
@@ -125,16 +130,20 @@ H10= pygame.transform.scale(pygame.image.load("cards/10H.png"), (BOT_CARD_WIDTH,
 HJ= pygame.transform.scale(pygame.image.load("cards/JH.png"), (BOT_CARD_WIDTH, BOT_CARD_HEIGHT))
 HQ= pygame.transform.scale(pygame.image.load("cards/QH.png"), (BOT_CARD_WIDTH, BOT_CARD_HEIGHT))
 HK= pygame.transform.scale(pygame.image.load("cards/KH.png"), (BOT_CARD_WIDTH, BOT_CARD_HEIGHT))
-global CARDS
-CARDS=[
+UC= pygame.transform.scale(pygame.image.load("cards/UnknownCard.png"),(BOT_CARD_WIDTH, BOT_CARD_HEIGHT))
+UCL=pygame.transform.rotate(UC, 15)
+UCR=pygame.transform.rotate(UC, -15)
+CARDS_=[
     [card.Card("A", "H", HA), card.Card("2", "H", H2), card.Card("3", "H", H3), card.Card("4", "H", H4), card.Card("5", "H", H5), card.Card("6", "H", H6), card.Card("7", "H", H7), card.Card("8", "H", H8), card.Card("9", "H", H9), card.Card("10", "H", H10), card.Card("J", "H", HJ), card.Card("Q", "H", HQ), card.Card("K", "H", HK) ],
     [card.Card("A", "C", CA), card.Card("2", "C", C2), card.Card("3", "C", C3), card.Card("4", "C", C4), card.Card("5", "C", C5), card.Card("6", "C", C6), card.Card("7", "C", C7), card.Card("8", "C", C8), card.Card("9", "C", C9), card.Card("10", "C", C10), card.Card("J", "C", CJ), card.Card("Q", "C", CQ), card.Card("K", "C", CK) ],
     [card.Card("A", "D", DA), card.Card("2", "D", D2), card.Card("3", "D", D3), card.Card("4", "D", D4), card.Card("5", "D", D5), card.Card("6", "D", D6), card.Card("7", "D", D7), card.Card("8", "D", D8), card.Card("9", "D", D9), card.Card("10", "D", D10), card.Card("J", "D", DJ), card.Card("Q", "D", DQ), card.Card("K", "D", DK) ],
     [card.Card("A", "S", SA), card.Card("2", "S", S2), card.Card("3", "S", S3), card.Card("4", "S", S4), card.Card("5", "S", S5), card.Card("6", "S", S6), card.Card("7", "S", S7), card.Card("8", "S", S8), card.Card("9", "S", S9), card.Card("10", "S", S10), card.Card("J", "S", SJ), card.Card("Q", "S", SQ), card.Card("K", "S", SK) ],
 ]
-
+temp_CARDS = [[], [], [], []]
+for suite in range(4):
+    for number in range(13):
+        temp_CARDS[suite].append(CARDS_[suite][number])
 #list of modes
-global MODES
 MODES=[btn_Hard, btn_Medium, btn_Easy]
 
 #Events
@@ -143,59 +152,276 @@ PLAY_MEDIUM = pygame.USEREVENT+2
 PLAY_HARD = pygame.USEREVENT+3
 
 #global money amounts
-global POT_AMT
 POT_AMT = 0
-global CALL_AMT
-CALL_AMT=6
 
 
 #players
-global USER
 USER = pl.Player()
-global BOT0
 BOT0 = pl.Player()
-global BOT1
 BOT1 = pl.Player()
-global BOT2
 BOT2 = pl.Player()
-global BOT3
 BOT3 = pl.Player()
-global PLAYERS
+USER.set_money(200)
 PLAYERS = [BOT0, BOT1, BOT2, BOT3, USER]
-global player
 player=4
-global is_Raising
 is_Raising=False
-raise_amt = slider.Slider(150, CALL_AMT, PLAYERS[-1].money, 600, 320)
+raise_amt = slider.Slider(150, 2, 500, 600, 320)
+has_dealt_cards=False
+#counters
+RIVER_CARD_COUNT=0
+PLAYERS_FOLDED=0
+CHECK_COUNT=0
+RIVER=[]
+is_a_tie=False
+def shuffle_cards(thingy):
+    shuffled_cards=[
+        [],
+        [],
+        [],
+        [],
+    ]
+    row=0
+    for i in range(4):
+        for j in range(13):
+            suite = int(random.random()*len(thingy))
+            number = int(random.random()*len(thingy[suite]))
+
+            temp = thingy[suite][number]
+            shuffled_cards[int(row/13)].append(temp)
+            thingy[suite].remove(thingy[suite][number])
+            if len(thingy[suite])==0:
+                thingy.remove(thingy[suite])
+
+            row += 1
+    return shuffled_cards
+
+cards=[]
+cards=shuffle_cards(temp_CARDS)
+temp_CARDS = [[], [], [], []]
+for suite in range(4):
+    for number in range(13):
+        temp_CARDS[suite].append(CARDS_[suite][number])
 
 
+def winner_animation(winners):
+    winner_text = WINNER_FONT.render("WINNER!", 1, BLUE)
+    print(str(len(RIVER)))
+    for i in range(12):
+        for winner in winners:
+            if winner == 0:
+                screen.blit(winner_text, (50, 265))
+            if winner == 1:
+                screen.blit(winner_text, (280, 136))
+            if winner == 2:
+                screen.blit(winner_text, (560, 135))
+            if winner == 3:
+                screen.blit(winner_text, (750, 265))
+            if winner == 4:
+                screen.blit(winner_text, (420, 400))
+        pygame.display.update()
+        pygame.time.delay(500)
+        Update_Game_Screen()
+        print(str(len(RIVER)))
+        reveal_cards()
+        pygame.display.update
+        pygame.time.delay(500)
 
+def reset_game():
+    global CHECK_COUNT
+    global PLAYERS_FOLDED
+    global RIVER
+    global RIVER_CARD_COUNT
+    global is_a_tie
+    global is_Raising
+    global POT_AMT
+    global PLAYERS
+    global cards
+    global temp_CARDS
+    global has_dealt_cards
+    has_dealt_cards=False
+    CHECK_COUNT=0
+    PLAYERS_FOLDED=0
+    RIVER=[]
+    RIVER_CARD_COUNT=0
+    is_a_tie=False
+    is_Raising=False
+    POT_AMT=0
+    for p in PLAYERS:
+        p.set_call(0)
+        p.set_has_cards(False)
+        p.set_folded(False)
+        p.set_last_move("")
+    cards = shuffle_cards(temp_CARDS)
+    temp_CARDS = [[], [], [], []]
+    for suite in range(4):
+        for number in range(13):
+            temp_CARDS[suite].append(CARDS_[suite][number])
+def set_calls(player, amt):
+    global PLAYERS
+    if player ==0:
+        for i in range(1,5):
+            PLAYERS[i].set_call(PLAYERS[i].call+amt)
+    else:
+        for i in range(player):
+            PLAYERS[i].set_call(PLAYERS[i].call+amt)
+        for j in range(player+1, 5):
+            PLAYERS[j].set_call(PLAYERS[j].call+amt)
+def increment_player():
+    global player
+    if player == 4:
+        player=0
+    else:
+        player+=1
+def check_Checks():
+    global CHECK_COUNT
+    if CHECK_COUNT==5-PLAYERS_FOLDED:
+        CHECK_COUNT=0
+        return True
+    else:
+        return False
 def handle_isRaising():
-    Pot_amt=POT_AMT
-    Call_amt=CALL_AMT
-    thingy=btn_Raise2.draw(screen)
+    global is_Raising
+    global POT_AMT
+    global PLAYERS
     value=raise_amt.draw(screen, POT_FONT)
-    if thingy:
-        Pot_amt+=value
-        Call_amt=value
+    if btn_Raise.draw(screen):
+        PLAYERS[-1].set_last_move("Raised $" + str(value))
+        POT_AMT+=value+PLAYERS[-1].call
         PLAYERS[-1].isRaising=False
-        PLAYERS[-1].money-=value
+        PLAYERS[-1].set_money(-(value+PLAYERS[-1].call))
+        PLAYERS[-1].set_call(0)
         is_Raising=False
+        CHECK_COUNT=1
+        set_calls(4, value)
+        increment_player()
 
+def handle_bot_move():
+    global player
+    global POT_AMT
+    global PLAYERS_FOLDED
+    global CHECK_COUNT
+    global PLAYERS
+    action = int(random.random() * 10)
+    if action <2:
+        PLAYERS[player].set_folded(True)
+        PLAYERS[player].set_has_cards(False)
+        fold_text = PLAYER_MOVE_FONT.render("Folded", 1, BLUE)
+        PLAYERS_FOLDED+=1
+        PLAYERS[player].set_last_move("Folded")
+        increment_player()
+    elif action <9:
+        if PLAYERS[player].call==0:
+            PLAYERS[player].set_last_move("Checked")
+            CHECK_COUNT+=1
+            increment_player()
+        else:
+            PLAYERS[player].set_last_move("Called $"+str(PLAYERS[player].call))
+            POT_AMT+= PLAYERS[player].call
+            PLAYERS[player].set_money(-PLAYERS[player].call)
+            PLAYERS[player].set_call(0)
+            CHECK_COUNT+=1
+            increment_player()
+    elif action <10:
+
+        bet = PLAYERS[player].call+int((1.01 ** (random.random() * math.log(PLAYERS[player].money-PLAYERS[player].call, 1.01))))
+        if PLAYERS[player].money -bet <0:
+            bet =1
+        PLAYERS[player].set_last_move("Raised $"+str(bet-PLAYERS[player].call))
+        POT_AMT += bet
+        CHECK_COUNT=1
+        PLAYERS[player].set_money(-(bet+PLAYERS[player].call))
+        set_calls(player, bet-PLAYERS[player].call)
+        PLAYERS[player].set_call(0)
+        increment_player()
+
+def print_dealt_cards():
+    if has_dealt_cards:
+        if PLAYERS[0].has_cards:
+            screen.blit(UCL, (40, 140))
+            screen.blit(UCR, (60, 140))
+        if PLAYERS[1].has_cards:
+            screen.blit(UCL, (270, 10))
+            screen.blit(UCR, (290, 10))
+        if PLAYERS[2].has_cards:
+            screen.blit(UCL, (550, 10))
+            screen.blit(UCR, (570, 10))
+        if PLAYERS[3].has_cards:
+            screen.blit(UCL, (730, 140))
+            screen.blit(UCR, (750, 140))
+        if PLAYERS[4].has_cards:
+            PLAYERS[4].card1.print_Card(screen, 405,275)
+            PLAYERS[4].card2.print_Card(screen, 445, 275)
+
+def reveal_cards():
+    if not PLAYERS[0].folded:
+        PLAYERS[0].card1.print_Card(screen, 30, 130)
+        PLAYERS[0].card2.print_Card(screen, 70, 130)
+    if not PLAYERS[1].folded:
+        PLAYERS[1].card1.print_Card(screen, 260, 5)
+        PLAYERS[1].card2.print_Card(screen, 300, 5)
+    if not PLAYERS[2].folded:
+        PLAYERS[2].card1.print_Card(screen,540, 5)
+        PLAYERS[2].card2.print_Card(screen,580, 5)
+    if not PLAYERS[3].folded:
+        PLAYERS[3].card1.print_Card(screen,720, 130)
+        PLAYERS[3].card2.print_Card(screen,760, 130)
+    pygame.display.update()
+
+
+def deal_cards():
+    global PLAYERS
+    global has_dealt_cards
+    has_dealt_cards=True
+    i = 0
+    for plyr in PLAYERS:
+        plyr.set_cards(cards[0][i], cards[0][i+1])
+        plyr.set_has_cards(True)
+        i+=2
+def deal_flop():
+    global RIVER_CARD_COUNT
+    global CHECK_COUNT
+    global cards
+    RIVER_CARD_COUNT+=3
+    RIVER.append(cards[0][10])
+    RIVER.append(cards[0][11])
+    RIVER.append(cards[0][12])
+    cards.remove(cards[0])
+    CHECK_COUNT=0
+def print_River():
+    i = 300
+    j=200
+    for card in RIVER:
+        card.print_Card(screen, i, j)
+        i+=BOT_CARD_WIDTH+10
 
 def handle_buttons():
+    global POT_AMT
+    global player
+    global PLAYERS
+    global is_Raising
+    global CHECK_COUNT
+    global PLAYERS_FOLDED
     if btn_Fold.draw(screen):
         PLAYERS[-1].set_folded(True)
-        player+=1
-    elif CALL_AMT==0:
+        PLAYERS_FOLDED+=1
+        PLAYERS[-1].set_last_move("Folded")
+        increment_player()
+    if PLAYERS[-1].call==0:
         if btn_Check.draw(screen):
-            player+=1
-    elif btn_Call.draw(screen):
-        POT_AMT+=CALL_AMT
-        PLAYERS[-1].set_money(PLAYERS[-1].money-CALL_AMT)
-        player+=1
-    elif btn_Raise.draw(screen):
+            PLAYERS[-1].set_last_move("Checked")
+            CHECK_COUNT+=1
+            increment_player()
+    else:
+        if btn_Call.draw(screen):
+            PLAYERS[-1].set_last_move("Called $"+str(PLAYERS[-1].call))
+            POT_AMT+=PLAYERS[-1].call
+            PLAYERS[-1].set_money(-PLAYERS[-1].call)
+            PLAYERS[-1].set_call(0)
+            CHECK_COUNT+=1
+            increment_player()
+    if btn_Raise.draw(screen):
         PLAYERS[-1].set_isRaising(True)
+        is_Raising=True
 
 def compare_cards(card1, card2):
     if card1.value>card2.value:
@@ -226,33 +452,87 @@ def check_straight_flush(cards):
         if cards[i].suite == cards[i+1].suite and cards[i].suite == cards[i+2].suite and cards[i].suite == cards[i+3].suite and cards[i].suite == cards[i+4].suite and cards[i].value== cards[i+1].value+1 and cards[i].value== cards[i+2].value+1 and cards[i].value== cards[i+3].value+1 and cards[i].value== cards[i+4].value+1:
             cards[i].value
     return -1
+
+def check_flush(cards):
+    for i in range(len(cards)-4):
+        if cards[i].suite == cards[i+1].suite and cards[i].suite == cards[i+2].suite and cards[i].suite == cards[i+3].suite and cards[i].suite == cards[i+4].suite:
+            return cards[i].value
+    return -1
+def check_straight(cards):
+    for i in range(len(cards)-4):
+        if cards[i].value == cards[i+1].value and cards[i].value == cards[i+2].value and cards[i].value == cards[i+3].value and cards[i].value == cards[i+4].value:
+            return cards[i].value
+    return -1
 def check_four_of_a_kind(cards):
     for i in range(len(cards)-3):
         if cards[i].value==cards[i+1].value and cards[i].value==cards[i+2].value and cards[i].value==cards[i+3].value:
             return cards[i].value
     return -1
 
+def check_full_house(cards):
+    found_two=0
+    found_three= 0
+    first_two_index=0
+    second_two_index=0
+    three_index=0
+    i=0
+    while i <len(cards)-1:
+        if cards[i].value == cards[i+1].value:
+            print("found two")
+            found_two +=1
+            if found_two ==1:
+                first_two_index = cards[i].value
+            else:
+                second_two_index = cards[i].value
+            i+=1
+        if i < len(cards) - 1:
+            if cards[i + 1].value == cards[i].value and cards[i -1].value == cards[i].value:
+                print("foundthree")
+                if found_two==1:
+                    first_two_index==0
+                else:
+                    second_two_index==0
+                found_two-=1
+                three_index = cards[i].value
+                found_three += 1
+                i += 1
+        i+=1
+
+
+    if found_two==1 and found_three==1:
+        return (0, three_index, first_two_index)
+    else:
+        return(-1, 0, 0)
 def check_doubles_triples(cards):
     found_two=0
     found_three= 0
     first_two_index=0
     second_two_index=0
     three_index=0
-    for i in range(len(cards)-1):
+    i=0
+    while i <len(cards)-1:
         if cards[i].value == cards[i+1].value:
+            print("found two")
             found_two +=1
             if found_two ==1:
                 first_two_index = cards[i].value
             else:
                 second_two_index = cards[i].value
-            i+=2
-        if i<len(cards)-2:
-            if cards[i+2].value == cards[i].value :
-                first_two_index=0
-                three_index=cards[i].value
+            i+=1
+        if i < len(cards) - 1:
+            if cards[i + 1].value == cards[i].value and cards[i -1].value == cards[i].value:
+                print("foundthree")
+                if found_two==1:
+                    first_two_index==0
+                else:
+                    second_two_index==0
                 found_two-=1
-                found_three+=1
-                i+=1
+                three_index = cards[i].value
+                found_three += 1
+                i += 1
+        i+=1
+
+
     if found_two==1 and found_three==1:
         return (45, three_index, first_two_index)
     elif found_three ==1:
@@ -262,100 +542,199 @@ def check_doubles_triples(cards):
     elif found_two ==1:
         return(0,first_two_index,0)
     else:
-        return -1
-
-
+        return (-1, 0, 0)
 
 
 def check_hand(river, card1, card2):
-    river.append(card1)
-    river.append(card2)
     cards=[]
-    cards=sort_cards(river)
+    temp_cards=[]
+    for i in range(len(river)):
+        temp_cards.append(river[i])
+    temp_cards.append(card1)
+    temp_cards.append(card2)
+    cards=sort_cards(temp_cards)
     if check_straight_flush(cards)!=-1:
             if cards[-1].value == 14:
                 return 200
             return 180+check_straight_flush(cards)
     elif check_four_of_a_kind(cards)!=-1:
         return 160+check_four_of_a_kind(cards)
-    elif check_doubles_triples(cards)!=-1:
+    elif check_full_house(cards)[0]!=-1:
+        return 140+check_full_house(cards)[1]
+    elif check_flush(cards)!=-1:
+        return 120+check_flush(cards)
+    elif check_straight(cards)!=-1:
+        return 100+check_straight(cards)
+    elif check_doubles_triples(cards)[0]!=-1:
         x= check_doubles_triples(cards)
-        return 100+x[0]+x[1]
+        return 40+x[0]+x[1]
     else:
         if card1.value>card2.value:
             return card1.value
         else:
             return card2.value
-def shuffle_cards(cards):
-    shuffled_cards=[
-        [],
-        [],
-        [],
-        [],
-    ]
-    row=0
-    for i in range(4):
-        for j in range(13):
-            suite = int(random.random()*len(cards))
-            number = int(random.random()*len(cards[suite]))
-
-            temp = cards[suite][number]
-            shuffled_cards[int(row/13)].append(temp)
-            cards[suite].remove(cards[suite][number])
-            if len(cards[suite])==0:
-                cards.remove(CARDS[suite])
-
-            row += 1
-
-    return shuffled_cards
 
 
+def check_win():
+    global player
+    global is_a_tie
+    global cards
+    global PLAYERS
+    if PLAYERS_FOLDED==4:
+        for i in range(len(PLAYERS)):
+            if not PLAYERS[i].folded:
+                print(f"Player {i} won")
+                PLAYERS[i].set_money(POT_AMT)
+                winner = [i]
+                winner_animation(winner)
+                return i
+    elif RIVER_CARD_COUNT==5:
+        max_score=-100
+        first_place=-1
+        tied_with = -1
+        for i in range(len(PLAYERS)):
+            if PLAYERS[i].folded==False:
+                score=check_hand(RIVER, PLAYERS[i].card1, PLAYERS[i].card2)
+                if score>max_score:
+                    max_score=score
+                    first_place=i
+                elif score==max_score:
+                    tied_with=i
+                    is_a_tie=True
+        if is_a_tie:
+            first_place_card = PLAYERS[first_place].card1
+            tied_with_card = PLAYERS[tied_with].card1
+            if PLAYERS[first_place].card1.value>PLAYERS[first_place].card2.value:
+                first_place_card = PLAYERS[first_place].card1
+            elif PLAYERS[first_place].card1.value<PLAYERS[first_place].card2.value:
+                first_place_card=PLAYERS[first_place].card2
+            elif PLAYERS[first_place].card1.value==PLAYERS[first_place].card2.value:
+                PLAYERS[first_place].set_money(int(POT_AMT/2))
+                PLAYERS[tied_with].set_money(int(POT_AMT/2))
+                print(f"Player {first_place} tied with Player {tied_with}")
+                winner = [first_place, tied_with]
+                winner_animation(winner)
+                return first_place
+            if PLAYERS[tied_with].card1.value>PLAYERS[tied_with].card2.value:
+                tied_with_card = PLAYERS[tied_with].card1
+            elif PLAYERS[tied_with].card1.value<PLAYERS[tied_with].card2.value:
+                tied_with_card=PLAYERS[tied_with].card2
+            if first_place_card.value >tied_with_card.value:
+                PLAYERS[first_place].set_money(POT_AMT)
+                is_a_tie = False
+                winner = [first_place]
+                winner_animation(winner)
+                return first_place
+            elif tied_with_card.value >first_place_card.value:
+                PLAYERS[tied_with].set_money(POT_AMT)
+                is_a_tie=False
+                winner = [tied_with]
+                winner_animation(winner)
+                return tied_with
+            else:
+                PLAYERS[first_place].set_money(int(POT_AMT / 2))
+                PLAYERS[tied_with].set_money(int(POT_AMT / 2))
+                print(f"Player {first_place} tied with Player {tied_with}")
+                winner = [first_place, tied_with]
+                winner_animation(winner)
+                return first_place
+
+
+        else:
+            PLAYERS[first_place].set_money(POT_AMT)
+            print(f"Player {first_place} won")
+            winner = [first_place]
+            winner_animation(winner)
+            return first_place
+    else:
+        return-1
 def Check_Home():
 
     if btn_Home.draw(screen):
 
         return True
     return False
-def Update_Game_Screen(cards, score, player):
+def Update_Game_Screen():
     screen.fill(GREEN)
-    #cards[0][0].print_Card(screen, 100,100)
-    #cards[0][1].print_Card(screen, 300,100)
-    #cards[0][2].print_Card(screen, 500,100)
-    #cards[0][3].print_Card(screen, 100,300)
-    #cards[0][4].print_Card(screen, 300,300)
-    score_text = POT_FONT.render(str(score), 1, WHITE)
-    screen.blit(score_text, (50, 50))
+
     screen.blit(Player1_img, ( 50, int(HEIGHT/2)))
     screen.blit(Player2_img, (280, 120))
     screen.blit(Player3_img, (WIDTH-280-60, 120))
     screen.blit(Player4_img, (WIDTH-150, int(HEIGHT/2)))
     screen.blit(USER_TAG_img, (WIDTH/2-(USER_TAG_WIDTH/2), 370))
-    if player == 4 and not PLAYERS[-1].isRaising:
-        handle_buttons()
-        btn_Fold.draw(screen)
-        btn_Raise.draw(screen)
-        if PLAYERS[4].call ==0:
-            btn_Check.draw(screen)
-        else:
-            btn_Call.draw(screen)
-    elif player==4 and PLAYERS[-1].isRaising:
-        handle_isRaising()
+    print_River()
+    pot_text = POT_FONT.render("Pot: $"+str(POT_AMT), 1, WHITE)
+    player_move_text0 = PLAYER_MOVE_FONT.render(PLAYERS[0].last_move, 1, BLUE)
+    player_move_text1 = PLAYER_MOVE_FONT.render(PLAYERS[1].last_move, 1, BLUE)
+    player_move_text2 = PLAYER_MOVE_FONT.render(PLAYERS[2].last_move, 1, BLUE)
+    player_move_text3 = PLAYER_MOVE_FONT.render(PLAYERS[3].last_move, 1, BLUE)
+    player_move_text4 = PLAYER_MOVE_FONT.render(PLAYERS[4].last_move, 1, BLUE)
+
+    money_text0 = PLAYER_MONEY_FONT.render("$" + str(PLAYERS[0].money), 1, WHITE)
+    money_text1 = PLAYER_MONEY_FONT.render("$" + str(PLAYERS[1].money), 1, WHITE)
+    money_text2 = PLAYER_MONEY_FONT.render("$" + str(PLAYERS[2].money), 1, WHITE)
+    money_text3 = PLAYER_MONEY_FONT.render("$" + str(PLAYERS[3].money), 1, WHITE)
+    money_text4 = PLAYER_MONEY_FONT.render("$" + str(PLAYERS[4].money), 1, WHITE)
+
+    screen.blit(money_text0, ( 60, 225 ))
+    screen.blit(money_text1, (290, 95))
+    screen.blit(money_text2, (570, 95))
+    screen.blit(money_text3, (760, 225))
+    screen.blit(money_text4, (430, 350))
+
+    screen.blit(player_move_text0, (50, 280))
+    screen.blit(player_move_text1, (280, 150))
+    screen.blit(player_move_text2, (560, 150))
+    screen.blit(player_move_text3, (750, 280))
+    screen.blit(player_move_text4, (420, 430))
+    screen.blit(pot_text, (140, 230))
+
+    print_dealt_cards()
+
+
+
+
+
     #btn_Home.draw(screen)
+
+
+def Play_Easy():
+    global PLAYERS
+    global POT_AMT
+    global cards
+    global RIVER_CARD_COUNT
+    global RIVER
+    Update_Game_Screen()
+    if not has_dealt_cards:
+        deal_cards()
+    if player == 4  and not PLAYERS[-1].folded:
+        if is_Raising:
+            handle_isRaising()
+        else:
+            handle_buttons()
+    else:
+
+        if PLAYERS[player].folded:
+            increment_player()
+        else:
+            handle_bot_move()
+            pygame.display.update()
+            pygame.time.delay(1000)
+    if len(RIVER) == 0 and CHECK_COUNT == 5 - PLAYERS_FOLDED:
+        deal_flop()
+    if check_win()!=-1:
+        reset_game()
+    if check_Checks():
+        RIVER.append(cards[0][0])
+        cards[0].remove(cards[0][0])
+        RIVER_CARD_COUNT+=1
+
+
+
     pygame.display.update()
 
-def Play_Easy(cards, player):
-    river = []
-    river.append(cards[0][0])
-    river.append(cards[0][1])
-    river.append(cards[0][2])
-    handle_buttons()
 
 
-    score = check_hand(river, cards[0][3], cards[0][4])
-
-
-
-    Update_Game_Screen(cards, score, player)
 def update_home_screen():
     screen.fill(GREEN)
     btn_Right.draw(screen)
@@ -395,19 +774,13 @@ def pick_mode():
 
 
 
-
-
 def main():
     clock = pygame.time.Clock()
     run=True
     Is_Playing = False
-    temp_cards=[]
-    temp_cards=CARDS
-    cards = []
-    cards=shuffle_cards(temp_cards)
-    temp_cards=[]
 
 
+    global player
     player = int(random.random()*len(PLAYERS))
     player=4
 
@@ -422,7 +795,7 @@ def main():
                 pygame.event.post(pygame.event.Event(PLAY_EASY))
 
                 Is_Playing=True
-                Play_Easy(cards, player)
+                Play_Easy()
             elif event.type==PLAY_MEDIUM:
                 pygame.event.post(pygame.event.Event(PLAY_MEDIUM))
                 if Check_Home():

@@ -25,7 +25,7 @@ class Slider:
             self.knob.y=self.slide.y
         elif pygame.mouse.get_pressed()[0]==1 and pos[1]<self.slide.y+self.slide.height+20 and pos[1]>self.slide.y+self.slide.height and pos[0]>self.slide.x-20 and pos[0]<self.slide.x+25:
             self.knob.y=self.slide.y+self.slide.height
-        value = int((self.knob.y - self.slide.y) / self.slide.height * (self.to - self.from_))
+        value = int((self.knob.y - self.slide.y) / self.slide.height * (self.to - self.from_))+self.from_
         number_text = font.render("$" + str(value), 1, (255, 255, 255))
         screen.blit(number_text, (self.slide.x - 30, self.slide.y + self.slide.height / 2))
         return value

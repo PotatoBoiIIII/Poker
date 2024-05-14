@@ -7,7 +7,7 @@ import player as pl
 import math
 
 pygame.font.init()
-
+pygame.mixer.init()
 # Global constants
 WIDTH = 900
 HEIGHT = 500
@@ -78,6 +78,14 @@ POT_FONT = pygame.font.SysFont("comicsans", 30)
 PLAYER_MONEY_FONT = pygame.font.SysFont("arial", 20)
 PLAYER_MOVE_FONT = pygame.font.SysFont("calibri", 20)
 WINNER_FONT = pygame.font.SysFont("calibri", 40)
+
+#sounds
+Fold_sound = pygame.mixer.Sound("Sounds/Fold_sound.mp3")
+Check_sound = pygame.mixer.Sound("Sounds/Check_sound.mp3")
+Raise_sound = pygame.mixer.Sound("Sounds/Raise_sound.mp3")
+Card_flip_sound = pygame.mixer.Sound("Sounds/card_turn_sound.mp3")
+Poker_chip_sound = pygame.mixer.Sound("Sounds/Poker_chip_sound.mp3")
+Winning_sound= pygame.mixer.Sound("Sounds/Winning_sound.mp3")
 
 # Card deck:
 SA = pygame.transform.scale(pygame.image.load("cards/AS.png"), (BOT_CARD_WIDTH, BOT_CARD_HEIGHT))
@@ -174,7 +182,7 @@ BOT0 = pl.Player()
 BOT1 = pl.Player()
 BOT2 = pl.Player()
 BOT3 = pl.Player()
-USER.set_money(200)
+USER.set_money(30250)
 PLAYERS = [BOT0, BOT1, BOT2, BOT3, USER]
 
 is_Raising = False
@@ -225,7 +233,10 @@ for suite in range(4):
 
 def winner_animation(winners):
     winner_text = WINNER_FONT.render("WINNER!", 1, BLUE)
-    for i in range(8):
+    Winning_sound.play()
+    Card_flip_sound.play()
+    reveal_cards()
+    for i in range(15):
         for winner in winners:
             if winner == 0:
                 screen.blit(winner_text, (50, 265))
@@ -341,6 +352,7 @@ def handle_isRaising():
         is_Raising = False
         CHECK_COUNT = 1
         set_calls(4, value)
+        Poker_chip_sound.play()
         increment_player()
 
 
@@ -351,10 +363,10 @@ def handle_bot_move():
     global PLAYERS
     if not has_done_small_blind:
         small_blind()
-        return
+        return "Raise"
     elif not has_done_big_blind:
         big_blind()
-        return
+        return "Raise"
     action = int(random.random() * 10)
     if action < 2:
         PLAYERS[player].set_folded(True)
@@ -363,18 +375,23 @@ def handle_bot_move():
         PLAYERS_FOLDED += 1
         PLAYERS[player].set_last_move("Folded")
         increment_player()
+        return "Fold"
     elif action < 9:
         if PLAYERS[player].call == 0:
             PLAYERS[player].set_last_move("Checked")
             CHECK_COUNT += 1
+            Check_sound.play()
             increment_player()
+            return "Check"
         else:
             PLAYERS[player].set_last_move("Called $" + str(PLAYERS[player].call))
             POT_AMT += PLAYERS[player].call
             PLAYERS[player].set_money(-PLAYERS[player].call)
             PLAYERS[player].set_call(0)
+            Poker_chip_sound.play()
             CHECK_COUNT += 1
             increment_player()
+            return "Call"
     elif action < 10:
         bet = 9999999999
         while PLAYERS[player].money - bet - PLAYERS[player].call < 0:
@@ -385,7 +402,9 @@ def handle_bot_move():
         PLAYERS[player].set_money(-(bet + PLAYERS[player].call))
         set_calls(player, bet)
         PLAYERS[player].set_call(0)
+        Poker_chip_sound.play()
         increment_player()
+        return "Raise"
 
 
 def print_dealt_cards():
@@ -462,6 +481,7 @@ def deal_cards():
     global has_dealt_cards
     has_dealt_cards = True
     i = 0
+    Card_flip_sound.play()
     for plyr in PLAYERS:
         plyr.set_cards(cards[0][i], cards[0][i + 1])
         plyr.set_has_cards(True)
@@ -478,6 +498,7 @@ def deal_flop():
     RIVER.append(cards[0][12])
     cards.remove(cards[0])
     CHECK_COUNT = 0
+    Card_flip_sound.play()
 
 
 def print_River():
@@ -499,11 +520,13 @@ def handle_buttons():
         PLAYERS[-1].set_folded(True)
         PLAYERS_FOLDED += 1
         PLAYERS[-1].set_last_move("Folded")
+        Fold_sound.play()
         increment_player()
     if PLAYERS[-1].call == 0:
         if btn_Check.draw(screen):
             PLAYERS[-1].set_last_move("Checked")
             CHECK_COUNT += 1
+            Check_sound.play()
             increment_player()
     else:
         if btn_Call.draw(screen):
@@ -512,8 +535,10 @@ def handle_buttons():
             PLAYERS[-1].set_money(-PLAYERS[-1].call)
             PLAYERS[-1].set_call(0)
             CHECK_COUNT += 1
+            Poker_chip_sound.play()
             increment_player()
     if btn_Raise.draw(screen):
+        Raise_sound.play()
         PLAYERS[-1].set_isRaising(True)
         is_Raising = True
 
@@ -842,8 +867,10 @@ def Play_Easy():
     elif player == 4 and not PLAYERS[-1].folded:
         if not has_done_small_blind:
             small_blind()
+            Poker_chip_sound.play()
         elif not has_done_big_blind:
             big_blind()
+            Poker_chip_sound.play()
         elif is_Raising:
             handle_isRaising()
         else:
@@ -853,9 +880,16 @@ def Play_Easy():
         if PLAYERS[player].folded:
             increment_player()
         else:
-            handle_bot_move()
+            move = handle_bot_move()
             pygame.display.update()
             pygame.time.delay(1000)
+            if move == "Fold":
+                Fold_sound.play()
+                pygame.time.delay(1000)
+            elif move == "Check":
+                Check_sound.play()
+            elif move == "Raise" or move == "Call":
+                Poker_chip_sound.play()
     if len(RIVER) == 0 and CHECK_COUNT == 5 - PLAYERS_FOLDED:
         deal_flop()
     if check_win() != -1:
@@ -865,6 +899,7 @@ def Play_Easy():
         RIVER.append(cards[0][0])
         cards[0].remove(cards[0][0])
         RIVER_CARD_COUNT += 1
+        Card_flip_sound.play()
 
     pygame.display.update()
 

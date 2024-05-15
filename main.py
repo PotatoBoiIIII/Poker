@@ -979,21 +979,15 @@ def main():
                 Is_Playing = True
                 Play_Easy()
             elif event.type == PLAY_MEDIUM:
-                pygame.event.post(pygame.event.Event(PLAY_MEDIUM))
-                if Check_Home():
-                    pygame.event.clear()
-                    Is_Playing = False
-                    main()
+                pygame.event.post(pygame.event.Event(PLAY_EASY))
+                Play_Easy()
                 Is_Playing = True
                 print("Medium")
             elif event.type == PLAY_HARD:
-                pygame.event.post(pygame.event.Event(PLAY_HARD))
-                if Check_Home():
-                    pygame.event.clear()
-                    Is_Playing = False
-                    main()
+                pygame.event.post(pygame.event.Event(PLAY_EASY))
+
                 Is_Playing = True
-                print("hard")
+                Play_Easy()
 
         if not Is_Playing:
             handle_Arrows(MODES)

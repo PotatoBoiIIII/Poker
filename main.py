@@ -15,6 +15,7 @@ GREEN = (88, 175, 54)
 WHITE = (255, 255, 255)
 BLUE = (0, 30, 230)
 LIGHT_GREEN = (43, 253, 11)
+YELLOW = (246, 242, 30)
 ARROW_WIDTH = 13 * 6
 ARROW_HEIGHT = 20 * 6
 MODE_WIDTH = 40 * 6
@@ -53,6 +54,7 @@ Player3_img = pygame.transform.scale(pygame.image.load("Players/Player3.png"), (
 Player4_img = pygame.transform.scale(pygame.image.load("Players/Player4.png"), (PLAYER_TAG_WIDTH, PLAYER_TAG_HEIGHT))
 USER_TAG_img = pygame.transform.scale(pygame.image.load("Players/You.png"), (USER_TAG_WIDTH, USER_TAG_HEIGHT))
 
+DEALER_TAG_img = pygame.transform.scale(pygame.image.load("Buttons/Dealer.png"), (21, 21))
 # Home Screen buttons
 btn_Right = button.Button(int(WIDTH / 2 + Easy_img.get_width() * 0.5) + 20, int(HEIGHT / 2 - Easy_img.get_height() / 2),
                           Right_Arrow_img)
@@ -239,15 +241,15 @@ def winner_animation(winners):
     for i in range(15):
         for winner in winners:
             if winner == 0:
-                screen.blit(winner_text, (50, 265))
+                screen.blit(winner_text, (40, 265))
             if winner == 1:
-                screen.blit(winner_text, (280, 136))
+                screen.blit(winner_text, (270, 136))
             if winner == 2:
-                screen.blit(winner_text, (560, 135))
+                screen.blit(winner_text, (550, 135))
             if winner == 3:
-                screen.blit(winner_text, (750, 265))
+                screen.blit(winner_text, (740, 265))
             if winner == 4:
-                screen.blit(winner_text, (420, 400))
+                screen.blit(winner_text, (400, 400))
         pygame.display.update()
         pygame.time.delay(500)
         Update_Game_Screen()
@@ -266,7 +268,7 @@ def draw_player_highlight():
     elif player == 3:
         pygame.draw.circle(screen, LIGHT_GREEN, [780, 215], 90, 90)
     elif player == 4:
-        pygame.draw.circle(screen, LIGHT_GREEN, [450, 340], 100, 100)
+        pygame.draw.circle(screen, LIGHT_GREEN, [450, 360], 100, 100)
 
 
 def reset_game():
@@ -308,7 +310,20 @@ def reset_game():
         for number in range(13):
             temp_CARDS[suite].append(CARDS_[suite][number])
 
-
+def print_dealer_button():
+    dealer = SMALl_BLIND-1
+    if SMALl_BLIND==0:
+        dealer = 4
+    if dealer == 0:
+        screen.blit(DEALER_TAG_img, (35, 260))
+    elif dealer == 1:
+        screen.blit(DEALER_TAG_img, (265, 100))
+    elif dealer == 2:
+        screen.blit(DEALER_TAG_img, (545, 100))
+    elif dealer == 3:
+        screen.blit(DEALER_TAG_img, (735, 260))
+    elif dealer == 4:
+        screen.blit(DEALER_TAG_img, (385, 410))
 def set_calls(player, amt):
     global PLAYERS
     if player == 0:
@@ -845,10 +860,11 @@ def Update_Game_Screen():
     screen.blit(player_move_text1, (280, 150))
     screen.blit(player_move_text2, (560, 150))
     screen.blit(player_move_text3, (750, 280))
-    screen.blit(player_move_text4, (420, 430))
-    screen.blit(pot_text, (140, 230))
+    screen.blit(player_move_text4, (400, 430))
+    screen.blit(pot_text, (700, 50))
 
     print_dealt_cards()
+    print_dealer_button()
 
     # btn_Home.draw(screen)
 

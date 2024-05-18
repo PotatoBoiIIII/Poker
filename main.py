@@ -607,7 +607,7 @@ def check_flush(cards):
     diamond_index = 0
     clubs_index =0
     for card in cards:
-        if card.suite == "A":
+        if card.suite == "S":
             spade_count+=1
             if card.value >spade_index:
                 spade_index=card.value
@@ -623,13 +623,13 @@ def check_flush(cards):
             clubs_count+=1
             if card.value >clubs_index:
                 clubs_index=card.value
-    if spade_count==5:
+    if spade_count>=5:
         return spade_index
-    elif heart_count==5:
+    elif heart_count>=5:
         return heart_index
-    elif diamond_count==5:
+    elif diamond_count>=5:
         return diamond_index
-    elif clubs_count==5:
+    elif clubs_count>=5:
         return clubs_index
     else:
         return-1

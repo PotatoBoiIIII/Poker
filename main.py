@@ -202,6 +202,7 @@ has_done_small_blind = False
 has_done_big_blind = False
 
 
+
 def shuffle_cards(thingy):
     shuffled_cards = [
         [],
@@ -357,6 +358,7 @@ def handle_isRaising():
     global is_Raising
     global POT_AMT
     global PLAYERS
+    global CHECK_COUNT
     value = raise_amt.draw(screen, POT_FONT)
     if btn_Raise.draw(screen):
         PLAYERS[-1].set_last_move("Raised $" + str(value))
@@ -964,8 +966,6 @@ def main():
     clock = pygame.time.Clock()
     run = True
     Is_Playing = False
-
-
 
     while run:
 

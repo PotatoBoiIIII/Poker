@@ -5,6 +5,9 @@ import card
 import random
 import player as pl
 import math
+import neat
+import os
+import pickle
 
 pygame.font.init()
 pygame.mixer.init()
@@ -312,6 +315,7 @@ def reset_game():
             temp_CARDS[suite].append(CARDS_[suite][number])
 
 def print_dealer_button():
+
     dealer = SMALl_BLIND-1
     if SMALl_BLIND==0:
         dealer = 4
@@ -325,6 +329,7 @@ def print_dealer_button():
         screen.blit(DEALER_TAG_img, (735, 260))
     elif dealer == 4:
         screen.blit(DEALER_TAG_img, (385, 410))
+
 def set_calls(player, amt):
     global PLAYERS
     if player == 0:
@@ -921,7 +926,8 @@ def Play_Easy():
 
     pygame.display.update()
 
-
+def Play_Medium():
+    pass
 def update_home_screen():
     screen.fill(GREEN)
     btn_Right.draw(screen)
@@ -962,7 +968,7 @@ def pick_mode():
             return 3
 
 
-def main():
+def main(screen):
     clock = pygame.time.Clock()
     run = True
     Is_Playing = False
@@ -995,5 +1001,137 @@ def main():
             update_home_screen()
     pygame.quit()
 
+def get_inputs(player):
+    inputs = []
+    if player.has_cards():
+        inputs.append(player.card1.value)
+        inputs.append(player.card1.suite)
+def handle_train_bot_move(net1, net2):
+    global POT_AMT
+    global PLAYERS_FOLDED
+    global CHECK_COUNT
+    global PLAYERS
+    if not has_done_small_blind:
+        small_blind()
+        return
+    elif not has_done_big_blind:
+        big_blind()
+        return
+    output = net1.activate(Players[player])
+    action = int(random.random() * 10)
+    if action < 2:
+        PLAYERS[player].set_folded(True)
+        PLAYERS[player].set_has_cards(False)
+        fold_text = PLAYER_MOVE_FONT.render("Folded", 1, BLUE)
+        PLAYERS_FOLDED += 1
+        PLAYERS[player].set_last_move("Folded")
+        increment_player()
+    elif action < 9:
+        if PLAYERS[player].call == 0:
+            PLAYERS[player].set_last_move("Checked")
+            CHECK_COUNT += 1
+            increment_player()
+        else:
+            PLAYERS[player].set_last_move("Called $" + str(PLAYERS[player].call))
+            POT_AMT += PLAYERS[player].call
+            PLAYERS[player].set_money(-PLAYERS[player].call)
+            PLAYERS[player].set_call(0)
+            CHECK_COUNT += 1
+            increment_player()
+    elif action < 10:
+        bet = 9999999999
+        while PLAYERS[player].money - bet - PLAYERS[player].call < 0:
+            bet = int(1.01 ** (random.random() * 145))
+        PLAYERS[player].set_last_move("Raised $" + str(bet))
+        POT_AMT += bet + PLAYERS[player].call
+        CHECK_COUNT = 1
+        PLAYERS[player].set_money(-(bet + PLAYERS[player].call))
+        set_calls(player, bet)
+        PLAYERS[player].set_call(0)
+        increment_player()
 
-main()
+def test_play_easy(genome1, genome2, config):
+    net1 = neat.nn.FeedForwardNetwork.create(genome1, config)
+    net2 = neat.nn.FeedForwardNetwork.create(genome2, config)
+
+    run = True
+    Is_Playing = False
+    
+    while run:
+
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                    run = False
+        global PLAYERS
+        global POT_AMT
+        global cards
+        global RIVER_CARD_COUNT
+        global RIVER
+        global player
+        Update_Game_Screen()
+        if not has_dealt_cards:
+            deal_cards()
+
+        
+
+        if PLAYERS[player].folded:
+                increment_player()
+        else:
+            move = handle_train_bot_move(net1, net2)
+            pygame.display.update()
+            
+            
+        if len(RIVER) == 0 and CHECK_COUNT == 5 - PLAYERS_FOLDED:
+            deal_flop()
+        if check_win() != -1:
+            reset_game()
+        if check_Checks():
+            player = SMALl_BLIND
+            RIVER.append(cards[0][0])
+            cards[0].remove(cards[0][0])
+            RIVER_CARD_COUNT += 1
+
+        pygame.display.update()
+
+def eval_genomes(genomes, config):
+    window = pygame.display.set_mode((WIDTH, HEIGHT))
+    for i, (genome_id1, genome1) in enumerate(genomes):
+        if i ==len(genomes)-1:
+            break
+        genome1.fitness = 0
+        for genome_id2, genome2, in genomes[i+4:]:
+            genome2.fitness = 0 if genome2.fitness == None else genome2.fitness
+            
+            test_play_easy(genome1, genome2, config)
+
+def run_neat(config):
+    #p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-12')
+    p = neat.Population(config)
+    p.add_reporter(neat.StdOutReporter(True))
+    stats = neat.StatisticsReporter()
+    p.add_reporter(stats)
+    p.add_reporter(neat.Checkpointer(1))
+
+    winner = p.run(eval_genomes, 50)
+    with open("best.picle", "wb") as f:
+        pickle.dump(winner, f)
+
+
+def test_ai(config):
+    window = pygame.display.set_mode((WIDTH, HEIGHT))
+    with open("best.picle", "rb") as f:
+        winner = pickle.load(f)
+    
+    play_ai(winner, config)
+
+if __name__== "__main__":
+    local_dir = os.path.dirname(__file__)
+    config_path= os.path.join(local_dir, "config.txt")
+
+    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                         config_path)
+    #run_neat(config)
+    #test_ai(config)
+

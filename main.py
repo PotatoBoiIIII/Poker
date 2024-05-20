@@ -184,7 +184,7 @@ BOT0 = pl.Player()
 BOT1 = pl.Player()
 BOT2 = pl.Player()
 BOT3 = pl.Player()
-USER.set_money(30250)
+
 PLAYERS = [BOT0, BOT1, BOT2, BOT3, USER]
 
 is_Raising = False
@@ -200,6 +200,7 @@ SMALl_BLIND = 3
 player = 3
 has_done_small_blind = False
 has_done_big_blind = False
+
 
 
 def shuffle_cards(thingy):
@@ -317,9 +318,9 @@ def print_dealer_button():
     if dealer == 0:
         screen.blit(DEALER_TAG_img, (35, 260))
     elif dealer == 1:
-        screen.blit(DEALER_TAG_img, (250, 120))
+        screen.blit(DEALER_TAG_img, (265, 100))
     elif dealer == 2:
-        screen.blit(DEALER_TAG_img, (540, 120))
+        screen.blit(DEALER_TAG_img, (545, 100))
     elif dealer == 3:
         screen.blit(DEALER_TAG_img, (735, 260))
     elif dealer == 4:
@@ -357,6 +358,7 @@ def handle_isRaising():
     global is_Raising
     global POT_AMT
     global PLAYERS
+    global CHECK_COUNT
     value = raise_amt.draw(screen, POT_FONT)
     if btn_Raise.draw(screen):
         PLAYERS[-1].set_last_move("Raised $" + str(value))
@@ -605,7 +607,7 @@ def check_flush(cards):
     diamond_index = 0
     clubs_index =0
     for card in cards:
-        if card.suite == "A":
+        if card.suite == "S":
             spade_count+=1
             if card.value >spade_index:
                 spade_index=card.value
@@ -621,13 +623,13 @@ def check_flush(cards):
             clubs_count+=1
             if card.value >clubs_index:
                 clubs_index=card.value
-    if spade_count==5:
+    if spade_count>=5:
         return spade_index
-    elif heart_count==5:
+    elif heart_count>=5:
         return heart_index
-    elif diamond_count==5:
+    elif diamond_count>=5:
         return diamond_index
-    elif clubs_count==5:
+    elif clubs_count>=5:
         return clubs_index
     else:
         return-1
@@ -965,8 +967,6 @@ def main():
     run = True
     Is_Playing = False
 
-
-
     while run:
 
         clock.tick(FPS)
@@ -982,7 +982,7 @@ def main():
                 pygame.event.post(pygame.event.Event(PLAY_EASY))
                 Play_Easy()
                 Is_Playing = True
-                
+                print("Medium")
             elif event.type == PLAY_HARD:
                 pygame.event.post(pygame.event.Event(PLAY_EASY))
 

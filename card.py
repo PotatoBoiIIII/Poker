@@ -3,6 +3,14 @@ class Card:
     def __init__(self, number, suite, img):
         self.img=img
         self.suite=suite
+        if suite == "H":
+            self.suite_val = 1
+        elif suite == "C":
+            self.suite_val=2
+        elif suite == "D":
+            self.suite_val=3
+        elif suite == "S":
+            self.suite_val=4
         self.number=number
         if self.number=="A":
             self.value=14

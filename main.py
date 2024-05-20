@@ -196,8 +196,8 @@ PLAYERS_FOLDED = 0
 CHECK_COUNT = 0
 RIVER = []
 is_a_tie = False
-SMALl_BLIND = 4
-player = 4
+SMALl_BLIND = 3
+player = 3
 has_done_small_blind = False
 has_done_big_blind = False
 
@@ -317,9 +317,9 @@ def print_dealer_button():
     if dealer == 0:
         screen.blit(DEALER_TAG_img, (35, 260))
     elif dealer == 1:
-        screen.blit(DEALER_TAG_img, (265, 100))
+        screen.blit(DEALER_TAG_img, (250, 120))
     elif dealer == 2:
-        screen.blit(DEALER_TAG_img, (545, 100))
+        screen.blit(DEALER_TAG_img, (540, 120))
     elif dealer == 3:
         screen.blit(DEALER_TAG_img, (735, 260))
     elif dealer == 4:
@@ -982,7 +982,7 @@ def main():
                 pygame.event.post(pygame.event.Event(PLAY_EASY))
                 Play_Easy()
                 Is_Playing = True
-                print("Medium")
+                
             elif event.type == PLAY_HARD:
                 pygame.event.post(pygame.event.Event(PLAY_EASY))
 

@@ -5,7 +5,18 @@ import pygame
 import os
 import pickle
 
+def test_ai(net):
+    clock = pygame.time.Clock()
+    run = True
 
+    while run:
+        clock.tick(60)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                break
+
+        
 
 
 def train_ai(genome1, genome2, genome3, genome4, genome5, config):

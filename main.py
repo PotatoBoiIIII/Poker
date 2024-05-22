@@ -375,6 +375,51 @@ def handle_isRaising():
         set_calls(4, value)
         Poker_chip_sound.play()
         increment_player()
+def handle_bot_train_move(decision, amt):
+    global POT_AMT
+    global PLAYERS_FOLDED
+    global CHECK_COUNT
+    global PLAYERS
+    if not has_done_small_blind:
+        small_blind()
+        return "Raise"
+    elif not has_done_big_blind:
+        big_blind()
+        return "Raise"
+    action = decision
+    if action ==0:
+        PLAYERS[player].set_folded(True)
+        PLAYERS[player].set_has_cards(False)
+        fold_text = PLAYER_MOVE_FONT.render("Folded", 1, BLUE)
+        PLAYERS_FOLDED += 1
+        PLAYERS[player].set_last_move("Folded")
+        increment_player()
+        return "Fold"
+    elif action ==1:
+        if PLAYERS[player].call == 0:
+            PLAYERS[player].set_last_move("Checked")
+            CHECK_COUNT += 1
+            increment_player()
+            return "Check"
+        else:
+            PLAYERS[player].set_last_move("Called $" + str(PLAYERS[player].call))
+            POT_AMT += PLAYERS[player].call
+            PLAYERS[player].set_money(-PLAYERS[player].call)
+            PLAYERS[player].set_call(0)
+            CHECK_COUNT += 1
+            increment_player()
+            return "Call"
+    elif action ==2:
+        bet = amt
+        PLAYERS[player].set_last_move("Raised $" + str(bet))
+        POT_AMT += bet + PLAYERS[player].call
+        CHECK_COUNT = 1
+        PLAYERS[player].set_money(-(bet + PLAYERS[player].call))
+        set_calls(player, bet)
+        PLAYERS[player].set_call(0)
+
+        increment_player()
+        return "Raise"    
 
 
 def handle_bot_move():
@@ -396,6 +441,7 @@ def handle_bot_move():
         PLAYERS_FOLDED += 1
         PLAYERS[player].set_last_move("Folded")
         increment_player()
+        Fold_sound.play()
         return "Fold"
     elif action < 9:
         if PLAYERS[player].call == 0:
@@ -874,6 +920,26 @@ def Update_Game_Screen():
 
     # btn_Home.draw(screen)
 
+def Play_train():
+    global PLAYERS
+    global POT_AMT
+    global cards
+    global RIVER_CARD_COUNT
+    global RIVER
+    global player
+    Update_Game_Screen()
+    if not has_dealt_cards:
+        deal_cards()
+    if len(RIVER) == 0 and CHECK_COUNT == 5 - PLAYERS_FOLDED:
+        deal_flop()
+    if check_Checks():
+        player = SMALl_BLIND
+        RIVER.append(cards[0][0])
+        cards[0].remove(cards[0][0])
+        RIVER_CARD_COUNT += 1
+        
+
+    pygame.display.update()
 
 def Play_Easy():
     global PLAYERS
@@ -914,8 +980,8 @@ def Play_Easy():
                 Poker_chip_sound.play()
     if len(RIVER) == 0 and CHECK_COUNT == 5 - PLAYERS_FOLDED:
         deal_flop()
-    #if check_win() !=-1:
-       # reset_game()
+    if check_win() !=-1:
+        reset_game()
     if check_Checks():
         player = SMALl_BLIND
         RIVER.append(cards[0][0])

@@ -61,14 +61,13 @@ def train_ai(genome1, genome2, genome3, genome4, genome5, config):
 
 def bot_move(genome, net, player):
     bot = main.PLAYERS[player]
-    river = main.RIVER
     river_input = []
-    for card in river:
-        river_input.append(card.value)
-        river_input.append(card.suite_val)
-    while len(river)<5:
-        river.append(0)
-    output = net.activate(bot.card1.value, bot.card1.suite_val, bot.card1.value, bot.card2.suite_val, river[0], river[1], river[2], river[3], river[4], river[5], river[6], river[7], river[8], river[9], river[10], )  
+    for card in main.RIVER:
+        river_input.append(main.RIVER)
+        river_input.append(main.RIVER)
+    while len(river_input)<10:
+        river_input.append(0)
+    output = net.activate((bot.card1.value, bot.card1.suite_val, bot.card2.value, bot.card2.suite_val, river_input[0], river_input[1], river_input[2], river_input[3], river_input[4], river_input[5], river_input[6], river_input[7], river_input[8], river_input[9], bot.call))  
     decision = output.index(max(output[:-1]))
     if decision < 2:
         main.handle_bot_train_move(decision, 0)

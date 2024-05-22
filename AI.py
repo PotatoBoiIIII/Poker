@@ -61,8 +61,14 @@ def train_ai(genome1, genome2, genome3, genome4, genome5, config):
 
 def bot_move(genome, net, player):
     bot = main.PLAYERS[player]
-    river = main.River
-    output = net.activate(bot.card1.value, bot.card1.suite_val, bot.card1.value, bot.card2.suite_val, river[0].value, river[0].suite_val, river[1].value, river[1].suite_val, river[2].value, river[2].suite_val, river[3].value, river[3].suite_val, river[4].value, river[4].suite_val)  
+    river = main.RIVER
+    river_input = []
+    for card in river:
+        river_input.append(card.value)
+        river_input.append(card.suite_val)
+    while len(river)<5:
+        river.append(0)
+    output = net.activate(bot.card1.value, bot.card1.suite_val, bot.card1.value, bot.card2.suite_val, river[0], river[1], river[2], river[3], river[4], river[5], river[6], river[7], river[8], river[9], river[10], )  
     decision = output.index(max(output[:-1]))
     if decision < 2:
         main.handle_bot_train_move(decision, 0)
@@ -87,13 +93,19 @@ def eval_genomes(genomes, config):
     for i, (genome_id1, genome1) in enumerate(genomes):
         
         genome1.fitness = 0
-        for genome_id2, genome2 in genomes[i+1:-4]:
+        for genome_id2, genome2 in (genomes[i+1:]):
             genome2.fitness = 0 if genome2.fitness == None else genome2.fitness
-            game = main.Play_train()
+            for genome_id3, genome3 in genomes[i+2:]:
+                genome3.fitness = 0 if genome3.fitness == None else genome3.fitness
+                for genome_id4, genome4 in (genomes[i+3:]):
+                    genome4.fitness = 0 if genome4.fitness == None else genome4.fitness
+                    for genome_id5, genome5 in (genomes[i+4:]):
+                        genome5.fitness = 0 if genome5.fitness == None else genome5.fitness
+            
 
-            force_quit = game.train_ai(genome1, genome2, config, draw=True)
-            if force_quit:
-                quit()
+                        force_quit =train_ai(genome1, genome2, genome3, genome4, genome5, config)
+                        if force_quit:
+                            quit()
 
 
 def run_neat(config):

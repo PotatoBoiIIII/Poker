@@ -7,7 +7,7 @@ import player as pl
 import math
 
 pygame.font.init()
-pygame.mixer.init()
+#pygame.mixer.init()
 # Global constants
 WIDTH = 900
 HEIGHT = 500
@@ -82,12 +82,12 @@ PLAYER_MOVE_FONT = pygame.font.SysFont("calibri", 20)
 WINNER_FONT = pygame.font.SysFont("calibri", 40)
 
 #sounds
-Fold_sound = pygame.mixer.Sound("Sounds/Fold_sound.mp3")
+"""Fold_sound = pygame.mixer.Sound("Sounds/Fold_sound.mp3")
 Check_sound = pygame.mixer.Sound("Sounds/Check_sound.mp3")
 Raise_sound = pygame.mixer.Sound("Sounds/Raise_sound.mp3")
 Card_flip_sound = pygame.mixer.Sound("Sounds/card_turn_sound.mp3")
 Poker_chip_sound = pygame.mixer.Sound("Sounds/Poker_chip_sound.mp3")
-Winning_sound= pygame.mixer.Sound("Sounds/Winning_sound.mp3")
+Winning_sound= pygame.mixer.Sound("Sounds/Winning_sound.mp3")"""
 
 # Card deck:
 SA = pygame.transform.scale(pygame.image.load("cards/AS.png"), (BOT_CARD_WIDTH, BOT_CARD_HEIGHT))
@@ -240,8 +240,8 @@ def reset_all():
         plyr.set_money((1000-plyr.money))
 def winner_animation(winners):
     winner_text = WINNER_FONT.render("WINNER!", 1, BLUE)
-    Winning_sound.play()
-    Card_flip_sound.play()
+    #Winning_sound.play()
+    #Card_flip_sound.play()
     reveal_cards()
     for i in range(15):
         for winner in winners:
@@ -373,7 +373,7 @@ def handle_isRaising():
         is_Raising = False
         CHECK_COUNT = 1
         set_calls(4, value)
-        Poker_chip_sound.play()
+        #Poker_chip_sound.play()
         increment_player()
 def handle_bot_train_move(decision, amt):
     global POT_AMT
@@ -441,13 +441,13 @@ def handle_bot_move():
         PLAYERS_FOLDED += 1
         PLAYERS[player].set_last_move("Folded")
         increment_player()
-        Fold_sound.play()
+        #Fold_sound.play()
         return "Fold"
     elif action < 9:
         if PLAYERS[player].call == 0:
             PLAYERS[player].set_last_move("Checked")
             CHECK_COUNT += 1
-            Check_sound.play()
+            #Check_sound.play()
             increment_player()
             return "Check"
         else:
@@ -455,7 +455,7 @@ def handle_bot_move():
             POT_AMT += PLAYERS[player].call
             PLAYERS[player].set_money(-PLAYERS[player].call)
             PLAYERS[player].set_call(0)
-            Poker_chip_sound.play()
+            #Poker_chip_sound.play()
             CHECK_COUNT += 1
             increment_player()
             return "Call"
@@ -469,7 +469,7 @@ def handle_bot_move():
         PLAYERS[player].set_money(-(bet + PLAYERS[player].call))
         set_calls(player, bet)
         PLAYERS[player].set_call(0)
-        Poker_chip_sound.play()
+        #Poker_chip_sound.play()
         increment_player()
         return "Raise"
 
@@ -548,7 +548,7 @@ def deal_cards():
     global has_dealt_cards
     has_dealt_cards = True
     i = 0
-    Card_flip_sound.play()
+    #Card_flip_sound.play()
     for plyr in PLAYERS:
         plyr.set_cards(cards[0][i], cards[0][i + 1])
         plyr.set_has_cards(True)
@@ -565,7 +565,7 @@ def deal_flop():
     RIVER.append(cards[0][12])
     cards.remove(cards[0])
     CHECK_COUNT = 0
-    Card_flip_sound.play()
+    #Card_flip_sound.play()
 
 
 def print_River():
@@ -587,13 +587,13 @@ def handle_buttons():
         PLAYERS[-1].set_folded(True)
         PLAYERS_FOLDED += 1
         PLAYERS[-1].set_last_move("Folded")
-        Fold_sound.play()
+        #Fold_sound.play()
         increment_player()
     if PLAYERS[-1].call == 0:
         if btn_Check.draw(screen):
             PLAYERS[-1].set_last_move("Checked")
             CHECK_COUNT += 1
-            Check_sound.play()
+            #Check_sound.play()
             increment_player()
     else:
         if btn_Call.draw(screen):
@@ -602,10 +602,10 @@ def handle_buttons():
             PLAYERS[-1].set_money(-PLAYERS[-1].call)
             PLAYERS[-1].set_call(0)
             CHECK_COUNT += 1
-            Poker_chip_sound.play()
+            #Poker_chip_sound.play()
             increment_player()
     if btn_Raise.draw(screen):
-        Raise_sound.play()
+        #Raise_sound.play()
         PLAYERS[-1].set_isRaising(True)
         is_Raising = True
 
@@ -955,10 +955,10 @@ def Play_Easy():
     elif player == 4 and not PLAYERS[-1].folded:
         if not has_done_small_blind:
             small_blind()
-            Poker_chip_sound.play()
+            #Poker_chip_sound.play()
         elif not has_done_big_blind:
             big_blind()
-            Poker_chip_sound.play()
+            #Poker_chip_sound.play()
         elif is_Raising:
             handle_isRaising()
         else:
@@ -972,12 +972,14 @@ def Play_Easy():
             pygame.display.update()
             pygame.time.delay(1000)
             if move == "Fold":
-                Fold_sound.play()
+                #Fold_sound.play()
                 pygame.time.delay(1000)
             elif move == "Check":
-                Check_sound.play()
+                pass
+                #Check_sound.play()
             elif move == "Raise" or move == "Call":
-                Poker_chip_sound.play()
+                pass
+                #Poker_chip_sound.play()
     if len(RIVER) == 0 and CHECK_COUNT == 5 - PLAYERS_FOLDED:
         deal_flop()
     if check_win() !=-1:
@@ -987,7 +989,7 @@ def Play_Easy():
         RIVER.append(cards[0][0])
         cards[0].remove(cards[0][0])
         RIVER_CARD_COUNT += 1
-        Card_flip_sound.play()
+        #Card_flip_sound.play()
 
     pygame.display.update()
 

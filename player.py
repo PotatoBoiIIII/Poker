@@ -1,5 +1,5 @@
 import pygame
-
+import card
 class Player:
     def __init__(self):
         self.folded=False
@@ -8,6 +8,8 @@ class Player:
         self.isRaising=False
         self.has_cards=False
         self.last_move = ""
+        self.card1=card.Card("A", "H", 3)
+        self.card2=card.Card("A", "H", 3)
     def set_money(self, change):
         self.money+=change
     def set_folded(self, folded):

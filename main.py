@@ -233,7 +233,11 @@ for suite in range(4):
     for number in range(13):
         temp_CARDS[suite].append(CARDS_[suite][number])
 
-
+def reset_all():
+    reset_game() 
+    global PLAYERS
+    for plyr in PLAYERS:
+        plyr.set_money((1000-plyr.money))
 def winner_animation(winners):
     winner_text = WINNER_FONT.render("WINNER!", 1, BLUE)
     Winning_sound.play()
@@ -910,8 +914,8 @@ def Play_Easy():
                 Poker_chip_sound.play()
     if len(RIVER) == 0 and CHECK_COUNT == 5 - PLAYERS_FOLDED:
         deal_flop()
-    if check_win() != -1:
-        reset_game()
+    #if check_win() !=-1:
+       # reset_game()
     if check_Checks():
         player = SMALl_BLIND
         RIVER.append(cards[0][0])
@@ -996,5 +1000,4 @@ def main():
             update_home_screen()
     pygame.quit()
 
-
-main()
+#main()

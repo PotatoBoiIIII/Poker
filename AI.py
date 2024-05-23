@@ -86,36 +86,54 @@ def calculate_fitness(genomes, players):
     
 
         
-
+def find_combos(lst, n):
+    if n == 0:
+        return[[]]
+    l = []
+    for i in range(0, len(lst)):
+        m = lst[i]
+        remLst=lst[i+1:]
+        for p in find_combos(remLst, n-1):
+            l.append([m]+p)
+    return l
 
 
 
 def eval_genomes(genomes, config):
     sum = 0
-
-    for i, (genome_id1, genome1) in enumerate(genomes):
+    
+    
+    genomes = [i for j, i in genomes]
+    for thing in genomes:
+        thing.fitness = 0
+    
+    combos = find_combos(genomes, 5)
+    print(str(len(combos)))
+    for combo in combos:
         
-        genome1.fitness = 0
-        for genome_id2, genome2 in (genomes[i+2:]):
-            genome2.fitness = 0 if genome2.fitness == None else genome2.fitness
-            for genome_id3, genome3 in genomes[i+4:]:
-                genome3.fitness = 0 if genome3.fitness == None else genome3.fitness
-                for genome_id4, genome4 in (genomes[i+6:]):
-                    genome4.fitness = 0 if genome4.fitness == None else genome4.fitness
-                    for genome_id5, genome5 in (genomes[i+8:]):
-                        genome5.fitness = 0 if genome5.fitness == None else genome5.fitness
-                        if sum%1000==0:
-                            print(str(sum))
-                        sum+=1
+        genome1 = combo[0]
+        genome2 = combo[1]
+        genome3 = combo[2]
+        genome4 = combo[3]
+        genome5 = combo[4]
+        genome1.fitness = 0 if genome1.fitness == None else genome1.fitness
+        genome2.fitness = 0 if genome2.fitness == None else genome2.fitness
+        genome3.fitness = 0 if genome3.fitness == None else genome3.fitness
+        genome4.fitness = 0 if genome4.fitness == None else genome4.fitness
+        genome5.fitness = 0 if genome5.fitness == None else genome5.fitness
+        if sum%100==0:
+            print(str(sum))
+        sum+=1
 
-                        force_quit =train_ai(genome1, genome2, genome3, genome4, genome5, config)
-                        if force_quit:
-                            quit()
+        force_quit =train_ai(genome1, genome2, genome3, genome4, genome5, config)
+        if force_quit:
+            quit()
 
+                        
 
 def run_neat(config):
-    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-0')
-    #p = neat.Population(config)
+    #p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-0')
+    p = neat.Population(config)
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)

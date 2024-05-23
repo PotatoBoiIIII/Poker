@@ -243,7 +243,7 @@ def winner_animation(winners):
     #Winning_sound.play()
     #Card_flip_sound.play()
     reveal_cards()
-    for i in range(15):
+    for i in range(1):
         for winner in winners:
             if winner == 0:
                 screen.blit(winner_text, (40, 265))
@@ -256,11 +256,11 @@ def winner_animation(winners):
             if winner == 4:
                 screen.blit(winner_text, (400, 400))
         pygame.display.update()
-        pygame.time.delay(500)
+        #pygame.time.delay(500)
         Update_Game_Screen()
         reveal_cards()
         pygame.display.update
-        pygame.time.delay(500)
+        #pygame.time.delay(500)
 
 
 def draw_player_highlight():
@@ -410,7 +410,7 @@ def handle_bot_train_move(decision, amt):
             increment_player()
             return "Call"
     elif action ==2:
-        bet = amt
+        bet = int(amt)+2
         PLAYERS[player].set_last_move("Raised $" + str(bet))
         POT_AMT += bet + PLAYERS[player].call
         CHECK_COUNT = 1
@@ -970,10 +970,11 @@ def Play_Easy():
         else:
             move = handle_bot_move()
             pygame.display.update()
-            pygame.time.delay(1000)
+            #pygame.time.delay(1000)
             if move == "Fold":
                 #Fold_sound.play()
-                pygame.time.delay(1000)
+                #pygame.time.delay(1000)
+                pass
             elif move == "Check":
                 pass
                 #Check_sound.play()

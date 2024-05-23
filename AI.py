@@ -30,13 +30,13 @@ def train_ai(genome1, genome2, genome3, genome4, genome5, config):
     net5 = neat.nn.FeedForwardNetwork.create(genome5, config)
     
 
-
+    negative = False
 
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return True
-        main.Play_train
+        main.Play_train()
         plyr =main.player
         if plyr == 0:
             bot_move(genome1, net1, plyr)
@@ -52,6 +52,11 @@ def train_ai(genome1, genome2, genome3, genome4, genome5, config):
         
 
         pygame.display.update()
+        if main.check_win()!=-1 or main.PLAYERS[0].money<700:
+            calculate_fitness([genome1, genome2, genome3, genome4, genome5], [main.PLAYERS])
+            main.reset_all()
+            break
+        
 
         
         
@@ -63,8 +68,8 @@ def bot_move(genome, net, player):
     bot = main.PLAYERS[player]
     river_input = []
     for card in main.RIVER:
-        river_input.append(main.RIVER)
-        river_input.append(main.RIVER)
+        river_input.append(card.value)
+        river_input.append(card.suite_val)
     while len(river_input)<10:
         river_input.append(0)
     output = net.activate((bot.card1.value, bot.card1.suite_val, bot.card2.value, bot.card2.suite_val, river_input[0], river_input[1], river_input[2], river_input[3], river_input[4], river_input[5], river_input[6], river_input[7], river_input[8], river_input[9], bot.call))  
@@ -75,8 +80,9 @@ def bot_move(genome, net, player):
         main.handle_bot_train_move(2, output[3])
 
 def calculate_fitness(genomes, players):
-    for genome, player in genomes, players:
-        genome.fitness+=player.money
+    
+    for i in range(len(genomes)):
+        genomes[i].fitness+=main.PLAYERS[i].money
     
 
         
@@ -85,22 +91,22 @@ def calculate_fitness(genomes, players):
 
 
 def eval_genomes(genomes, config):
-    """
-    Run each genome against eachother one time to determine the fitness.
-    """
+    sum = 0
 
     for i, (genome_id1, genome1) in enumerate(genomes):
         
         genome1.fitness = 0
-        for genome_id2, genome2 in (genomes[i+1:]):
+        for genome_id2, genome2 in (genomes[i+2:]):
             genome2.fitness = 0 if genome2.fitness == None else genome2.fitness
-            for genome_id3, genome3 in genomes[i+2:]:
+            for genome_id3, genome3 in genomes[i+4:]:
                 genome3.fitness = 0 if genome3.fitness == None else genome3.fitness
-                for genome_id4, genome4 in (genomes[i+3:]):
+                for genome_id4, genome4 in (genomes[i+6:]):
                     genome4.fitness = 0 if genome4.fitness == None else genome4.fitness
-                    for genome_id5, genome5 in (genomes[i+4:]):
+                    for genome_id5, genome5 in (genomes[i+8:]):
                         genome5.fitness = 0 if genome5.fitness == None else genome5.fitness
-            
+                        if sum%1000==0:
+                            print(str(sum))
+                        sum+=1
 
                         force_quit =train_ai(genome1, genome2, genome3, genome4, genome5, config)
                         if force_quit:
@@ -108,8 +114,8 @@ def eval_genomes(genomes, config):
 
 
 def run_neat(config):
-    #p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-85')
-    p = neat.Population(config)
+    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-0')
+    #p = neat.Population(config)
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)
@@ -128,8 +134,8 @@ def test_best_network(config):
     width, height = 700, 500
     win = pygame.display.set_mode((width, height))
     pygame.display.set_caption("Pong")
-    pong = main.Play_train()
-    pong.test_ai(winner_net)
+    main.Play_train()
+    test_ai(winner_net)
 
 if __name__ == '__main__':
     local_dir = os.path.dirname(__file__)

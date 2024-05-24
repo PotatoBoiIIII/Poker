@@ -936,6 +936,23 @@ def Play_train():
 
     pygame.display.update()
 
+def Play_Medium(net):
+    
+    river_input = []
+    for card in RIVER:
+        river_input.append(card.value)
+        river_input.append(card.suite_val)
+    while len(river_input)<10:
+        river_input.append(0)
+    output = net.activate((PLAYERS[player].card1.value, PLAYERS[player].card1.suite_val, PLAYERS[player].card2.value, PLAYERS[player].card2.suite_val, river_input[0], river_input[1], river_input[2], river_input[3], river_input[4], river_input[5], river_input[6], river_input[7], river_input[8], river_input[9], bot.call))  
+    decision = output.index(max(output[:-1]))
+    if decision == 1:
+        genome.fitness-=2
+    if decision < 2:
+        main.handle_bot_train_move(decision, 0)
+    else:
+        main.handle_bot_train_move(2, output[3])
+
 def Play_Easy():
     global PLAYERS
     global POT_AMT

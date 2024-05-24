@@ -380,12 +380,7 @@ def handle_bot_train_move(decision, amt):
     global PLAYERS_FOLDED
     global CHECK_COUNT
     global PLAYERS
-    if not has_done_small_blind:
-        small_blind()
-        return "Raise"
-    elif not has_done_big_blind:
-        big_blind()
-        return "Raise"
+    
     action = decision
     if action ==0:
         PLAYERS[player].set_folded(True)

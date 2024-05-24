@@ -941,6 +941,61 @@ def Play_train():
 
     pygame.display.update()
 
+def Play_Medium(net):
+    global PLAYERS
+    global POT_AMT
+    global cards
+    global RIVER_CARD_COUNT
+    global RIVER
+    global player
+    river_input = []
+    for card in main.RIVER:
+        river_input.append(card.value)
+        river_input.append(card.suite_val)
+    while len(river_input)<10:
+        river_input.append(0)
+
+    bot = PLAYERS[player]
+    output = net.activate((bot.card1.value, bot.card1.suite_val, bot.card2.value, bot.card2.suite_val, river_input[0], river_input[1], river_input[2], river_input[3], river_input[4], river_input[5], river_input[6], river_input[7], river_input[8], river_input[9], bot.call))
+    Update_Game_Screen()
+    if not has_dealt_cards:
+        deal_cards()
+
+    elif player == 4 and not PLAYERS[-1].folded:
+        if not has_done_small_blind:
+            small_blind()
+            #Poker_chip_sound.play()
+        elif not has_done_big_blind:
+            big_blind()
+            #Poker_chip_sound.play()
+        elif is_Raising:
+            handle_isRaising()
+        else:
+            handle_buttons()
+    else:
+
+        if PLAYERS[player].folded:
+            increment_player()
+        else:
+            decision = output.index(max(output[:-1]))
+            if decision < 2:
+                main.handle_bot_train_move(decision, 0)
+            else:
+                main.handle_bot_train_move(2, output[3])
+                    
+    if len(RIVER) == 0 and CHECK_COUNT == 5 - PLAYERS_FOLDED:
+        deal_flop()
+    if check_win() !=-1:
+        reset_game()
+    if check_Checks():
+        player = SMALl_BLIND
+        RIVER.append(cards[0][0])
+        cards[0].remove(cards[0][0])
+        RIVER_CARD_COUNT += 1
+        #Card_flip_sound.play()
+
+    pygame.display.update()
+
 def Play_Easy():
     global PLAYERS
     global POT_AMT
@@ -1035,7 +1090,7 @@ def pick_mode():
             return 3
 
 
-def main():
+def main(net):
     clock = pygame.time.Clock()
     run = True
     Is_Playing = False
@@ -1052,10 +1107,10 @@ def main():
                 Is_Playing = True
                 Play_Easy()
             elif event.type == PLAY_MEDIUM:
-                pygame.event.post(pygame.event.Event(PLAY_EASY))
-                Play_Easy()
+                pygame.event.post(pygame.event.Event(PLAY_MEDIUM))
+                Play_Medium()
                 Is_Playing = True
-                print("Medium")
+               
             elif event.type == PLAY_HARD:
                 pygame.event.post(pygame.event.Event(PLAY_EASY))
 

@@ -53,7 +53,7 @@ def train_ai(genome1, genome2, genome3, genome4, genome5, config):
 
         pygame.display.update()
         if main.check_win()!=-1 or main.PLAYERS[0].money<700:
-            calculate_fitness([genome1, genome2, genome3, genome4, genome5], [main.PLAYERS])
+            calculate_fitness([genome1, genome2, genome3, genome4, genome5], main.PLAYERS)
             main.reset_all()
             break
         
@@ -77,12 +77,14 @@ def bot_move(genome, net, player):
     if decision < 2:
         main.handle_bot_train_move(decision, 0)
     else:
+        genome.fitness+=5
         main.handle_bot_train_move(2, output[3])
 
 def calculate_fitness(genomes, players):
     
     for i in range(len(genomes)):
-        genomes[i].fitness+=main.PLAYERS[i].money
+        genomes[i].fitness+=main.PLAYERS[i].money-1000
+        
     
 
         
@@ -121,7 +123,7 @@ def eval_genomes(genomes, config):
         genome3.fitness = 0 if genome3.fitness == None else genome3.fitness
         genome4.fitness = 0 if genome4.fitness == None else genome4.fitness
         genome5.fitness = 0 if genome5.fitness == None else genome5.fitness
-        if sum%100==0:
+        if sum%1000==0:
             print(str(sum))
         sum+=1
 
@@ -132,14 +134,14 @@ def eval_genomes(genomes, config):
                         
 
 def run_neat(config):
-    #p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-0')
-    p = neat.Population(config)
+    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-11')
+    #p = neat.Population(config)
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)
     p.add_reporter(neat.Checkpointer(1))
 
-    winner = p.run(eval_genomes, 50)
+    winner = p.run(eval_genomes, 11)
     with open("best.pickle", "wb") as f:
         pickle.dump(winner, f)
 

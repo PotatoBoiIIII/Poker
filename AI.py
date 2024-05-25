@@ -74,10 +74,14 @@ def bot_move(genome, net, player):
         river_input.append(0)
     output = net.activate((bot.card1.value, bot.card1.suite_val, bot.card2.value, bot.card2.suite_val, river_input[0], river_input[1], river_input[2], river_input[3], river_input[4], river_input[5], river_input[6], river_input[7], river_input[8], river_input[9], bot.call))  
     decision = output.index(max(output[:-1]))
+    if decision ==1:
+        genome.fitness-=1
     if decision < 2:
         main.handle_bot_train_move(decision, 0)
     else:
-        genome.fitness+=5
+        genome.fitness+=1
+        if output[3]>600:
+            genome.fitness-=10
         main.handle_bot_train_move(2, output[3])
 
 def calculate_fitness(genomes, players):
@@ -134,7 +138,7 @@ def eval_genomes(genomes, config):
                         
 
 def run_neat(config):
-    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-11')
+    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-3')
     #p = neat.Population(config)
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()

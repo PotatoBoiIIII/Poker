@@ -5,6 +5,7 @@ import card
 import random
 import player as pl
 import math
+import numpy as np
 
 pygame.font.init()
 #pygame.mixer.init()

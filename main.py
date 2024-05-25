@@ -945,7 +945,7 @@ def Play_Medium(net):
     global RIVER
     global player
     river_input = []
-    for card in main.RIVER:
+    for card in RIVER:
         river_input.append(card.value)
         river_input.append(card.suite_val)
     while len(river_input)<10:
@@ -975,9 +975,9 @@ def Play_Medium(net):
         else:
             decision = output.index(max(output[:-1]))
             if decision < 2:
-                main.handle_bot_train_move(decision, 0)
+                handle_bot_train_move(decision, 0)
             else:
-                main.handle_bot_train_move(2, output[3])
+                handle_bot_train_move(2, output[3])
                     
     if len(RIVER) == 0 and CHECK_COUNT == 5 - PLAYERS_FOLDED:
         deal_flop()
@@ -1104,7 +1104,7 @@ def main(net):
                 Play_Easy()
             elif event.type == PLAY_MEDIUM:
                 pygame.event.post(pygame.event.Event(PLAY_MEDIUM))
-                Play_Medium()
+                Play_Medium(net)
                 Is_Playing = True
                
             elif event.type == PLAY_HARD:

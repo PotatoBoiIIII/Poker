@@ -6,15 +6,7 @@ import os
 import pickle
 
 def test_ai(net):
-    clock = pygame.time.Clock()
-    run = True
-
-    while run:
-        clock.tick(60)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-                break
+    main.main(net)
 
         
 
@@ -79,9 +71,10 @@ def bot_move(genome, net, player):
     if decision < 2:
         main.handle_bot_train_move(decision, 0)
     else:
-        genome.fitness+=1
+        if output[3]>100:
+            genome.fitness+=1
         if output[3]>600:
-            genome.fitness-=10
+            genome.fitness-=100000000
         main.handle_bot_train_move(2, output[3])
 
 def calculate_fitness(genomes, players):
@@ -138,14 +131,14 @@ def eval_genomes(genomes, config):
                         
 
 def run_neat(config):
-    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-5')
-    #p = neat.Population(config)
+    #p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-0')
+    p = neat.Population(config)
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats) 
     p.add_reporter(neat.Checkpointer(1))
 
-    winner = p.run(eval_genomes, 48)
+    winner = p.run(eval_genomes, 34)
     with open("best.pickle", "wb") as f:
         pickle.dump(winner, f)
 
@@ -155,10 +148,7 @@ def test_best_network(config):
         winner = pickle.load(f)
     winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
 
-    width, height = 700, 500
-    win = pygame.display.set_mode((width, height))
-    pygame.display.set_caption("Pong")
-    main.Play_train()
+    
     test_ai(winner_net)
 
 if __name__ == '__main__':

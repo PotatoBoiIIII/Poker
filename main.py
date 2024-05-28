@@ -6,9 +6,12 @@ import random
 import player as pl
 import math
 import numpy as np
+import os
+import pickle
+import neat
 
 pygame.font.init()
-#pygame.mixer.init()
+pygame.mixer.init()
 # Global constants
 WIDTH = 900
 HEIGHT = 500
@@ -83,12 +86,12 @@ PLAYER_MOVE_FONT = pygame.font.SysFont("calibri", 20)
 WINNER_FONT = pygame.font.SysFont("calibri", 40)
 
 #sounds
-"""Fold_sound = pygame.mixer.Sound("Sounds/Fold_sound.mp3")
+Fold_sound = pygame.mixer.Sound("Sounds/Fold_sound.mp3")
 Check_sound = pygame.mixer.Sound("Sounds/Check_sound.mp3")
 Raise_sound = pygame.mixer.Sound("Sounds/Raise_sound.mp3")
 Card_flip_sound = pygame.mixer.Sound("Sounds/card_turn_sound.mp3")
 Poker_chip_sound = pygame.mixer.Sound("Sounds/Poker_chip_sound.mp3")
-Winning_sound= pygame.mixer.Sound("Sounds/Winning_sound.mp3")"""
+Winning_sound= pygame.mixer.Sound("Sounds/Winning_sound.mp3")
 
 # Card deck:
 SA = pygame.transform.scale(pygame.image.load("cards/AS.png"), (BOT_CARD_WIDTH, BOT_CARD_HEIGHT))
@@ -242,7 +245,6 @@ def reset_all():
 def winner_animation(winners):
     winner_text = WINNER_FONT.render("WINNER!", 1, BLUE)
     #Winning_sound.play()
-    #Card_flip_sound.play()
     reveal_cards()
     for i in range(1):
         for winner in winners:
@@ -256,12 +258,15 @@ def winner_animation(winners):
                 screen.blit(winner_text, (740, 265))
             if winner == 4:
                 screen.blit(winner_text, (400, 400))
+        reveal_cards()
+        """
         pygame.display.update()
-        #pygame.time.delay(500)
+        pygame.time.delay(500)
         Update_Game_Screen()
         reveal_cards()
         pygame.display.update
-        #pygame.time.delay(500)
+        pygame.time.delay(500)
+        """
 
 
 def draw_player_highlight():
@@ -381,7 +386,12 @@ def handle_bot_train_move(decision, amt):
     global PLAYERS_FOLDED
     global CHECK_COUNT
     global PLAYERS
-    
+    if not has_done_small_blind:
+        small_blind()
+        return "Blind"
+    elif not has_done_big_blind:
+        big_blind()
+        return "Blind"
     action = decision
     if action ==0:
         PLAYERS[player].set_folded(True)
@@ -522,6 +532,8 @@ def small_blind():
     set_calls(SMALl_BLIND, 2)
     PLAYERS[SMALl_BLIND].set_call(0)
     increment_player()
+    #pygame.time.delay(1000)
+    Update_Game_Screen()
 
 
 def big_blind():
@@ -537,6 +549,8 @@ def big_blind():
     set_calls((SMALl_BLIND + 1) % 5, 2)
     PLAYERS[(SMALl_BLIND + 1) % 5].set_call(0)
     increment_player()
+    #pygame.time.delay(1000)
+    Update_Game_Screen()
 
 
 def deal_cards():
@@ -589,7 +603,7 @@ def handle_buttons():
         if btn_Check.draw(screen):
             PLAYERS[-1].set_last_move("Checked")
             CHECK_COUNT += 1
-            #Check_sound.play()
+            Check_sound.play()
             increment_player()
     else:
         if btn_Call.draw(screen):
@@ -598,10 +612,10 @@ def handle_buttons():
             PLAYERS[-1].set_money(-PLAYERS[-1].call)
             PLAYERS[-1].set_call(0)
             CHECK_COUNT += 1
-            #Poker_chip_sound.play()
+            Poker_chip_sound.play()
             increment_player()
     if btn_Raise.draw(screen):
-        #Raise_sound.play()
+        Raise_sound.play()
         PLAYERS[-1].set_isRaising(True)
         is_Raising = True
 
@@ -683,8 +697,8 @@ def check_flush(cards):
 
 def check_straight(cards):
     for i in range(len(cards) - 4):
-        if cards[i].value == cards[i + 1].value - 1 and cards[i].value == cards[i + 2].value - 2 and cards[i].value == \
-                cards[i + 3].value - 3 and cards[i].value == cards[i + 4].value - 4:
+        if cards[i].value == cards[i + 1].value + 1 and cards[i].value == cards[i + 2].value + 2 and cards[i].value == \
+                cards[i + 3].value + 3 and cards[i].value == cards[i + 4].value + 4:
             return cards[i].value
     return -1
 
@@ -820,6 +834,7 @@ def check_win():
                 if score > max_score:
                     max_score = score
                     first_place = i
+                    is_a_tie = False
                 elif score == max_score:
                     tied_with = i
                     is_a_tie = True
@@ -952,7 +967,7 @@ def Play_Medium(net):
         river_input.append(0)
 
     bot = PLAYERS[player]
-    output = net.activate((bot.card1.value, bot.card1.suite_val, bot.card2.value, bot.card2.suite_val, river_input[0], river_input[1], river_input[2], river_input[3], river_input[4], river_input[5], river_input[6], river_input[7], river_input[8], river_input[9], bot.call))
+    output = net.activate((check_hand(RIVER, bot.card1, bot.card2), bot.call, RIVER_CARD_COUNT))
     Update_Game_Screen()
     if not has_dealt_cards:
         deal_cards()
@@ -960,10 +975,14 @@ def Play_Medium(net):
     elif player == 4 and not PLAYERS[-1].folded:
         if not has_done_small_blind:
             small_blind()
-            #Poker_chip_sound.play()
+            Poker_chip_sound.play()
+            
+            
         elif not has_done_big_blind:
             big_blind()
-            #Poker_chip_sound.play()
+            Poker_chip_sound.play()
+            
+            
         elif is_Raising:
             handle_isRaising()
         else:
@@ -975,9 +994,23 @@ def Play_Medium(net):
         else:
             decision = output.index(max(output[:-1]))
             if decision < 2:
-                handle_bot_train_move(decision, 0)
+                move = handle_bot_train_move(decision, 0)
             else:
-                handle_bot_train_move(2, output[3])
+                move = handle_bot_train_move(2, output[3])
+            pygame.display.update()
+            if move == "Blind":
+                Poker_chip_sound.play()
+            else:
+                pygame.time.delay(1000)
+                if move == "Fold":
+                    Fold_sound.play()
+                    pygame.time.delay(1000)
+                    
+                elif move == "Check":
+                    
+                    Check_sound.play()
+                elif move == "Raise" or move == "Call":
+                    Poker_chip_sound.play()
                     
     if len(RIVER) == 0 and CHECK_COUNT == 5 - PLAYERS_FOLDED:
         deal_flop()
@@ -988,7 +1021,7 @@ def Play_Medium(net):
         RIVER.append(cards[0][0])
         cards[0].remove(cards[0][0])
         RIVER_CARD_COUNT += 1
-        #Card_flip_sound.play()
+        Card_flip_sound.play()
 
     pygame.display.update()
 
@@ -1006,10 +1039,12 @@ def Play_Easy():
     elif player == 4 and not PLAYERS[-1].folded:
         if not has_done_small_blind:
             small_blind()
-            #Poker_chip_sound.play()
+            Poker_chip_sound.play()
+            pygame.time.delay(1000)
         elif not has_done_big_blind:
             big_blind()
-            #Poker_chip_sound.play()
+            Poker_chip_sound.play()
+            pygame.time.delay(1000)
         elif is_Raising:
             handle_isRaising()
         else:
@@ -1021,17 +1056,17 @@ def Play_Easy():
         else:
             move = handle_bot_move()
             pygame.display.update()
-            #pygame.time.delay(1000)
+            pygame.time.delay(1000)
             if move == "Fold":
-                #Fold_sound.play()
-                #pygame.time.delay(1000)
+                Fold_sound.play()
+                pygame.time.delay(1000)
                 pass
             elif move == "Check":
                 pass
-                #Check_sound.play()
+                Check_sound.play()
             elif move == "Raise" or move == "Call":
                 pass
-                #Poker_chip_sound.play()
+                Poker_chip_sound.play()
     if len(RIVER) == 0 and CHECK_COUNT == 5 - PLAYERS_FOLDED:
         deal_flop()
     if check_win() !=-1:
@@ -1120,4 +1155,14 @@ def main(net):
             update_home_screen()
     pygame.quit()
 
-#main()
+if __name__ == "__main__":
+    local_dir = os.path.dirname(__file__)
+    config_path = os.path.join(local_dir, 'config.txt')
+
+    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                         config_path)
+    with open("secondBest.pickle", "rb") as f:
+        winner = pickle.load(f)
+    winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
+    main(winner_net)

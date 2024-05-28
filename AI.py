@@ -64,17 +64,18 @@ def bot_move(genome, net, player):
         river_input.append(card.suite_val)
     while len(river_input)<10:
         river_input.append(0)
-    output = net.activate((bot.card1.value, bot.card1.suite_val, bot.card2.value, bot.card2.suite_val, river_input[0], river_input[1], river_input[2], river_input[3], river_input[4], river_input[5], river_input[6], river_input[7], river_input[8], river_input[9], bot.call))  
+    output = net.activate((main.check_hand(main.RIVER, bot.card1, bot.card2), bot.call, main.RIVER_CARD_COUNT, main.POT_AMT))  
     decision = output.index(max(output[:-1]))
-    if decision ==1:
+    if decision ==0 and main.check_hand(main.RIVER, bot.card1, bot.card2)<46 and bot.call!=0:
+        genome.fitness+=10
+    elif decision == 2 and output[3]<6:
         genome.fitness-=1
+
     if decision < 2:
         main.handle_bot_train_move(decision, 0)
     else:
-        if output[3]>100:
-            genome.fitness+=1
-        if output[3]>600:
-            genome.fitness-=100000000
+        if bot.money-output[3]<0:
+            genome.fitness-=100000
         main.handle_bot_train_move(2, output[3])
 
 def calculate_fitness(genomes, players):
@@ -131,15 +132,15 @@ def eval_genomes(genomes, config):
                         
 
 def run_neat(config):
-    #p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-0')
+    #p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-30')
     p = neat.Population(config)
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats) 
     p.add_reporter(neat.Checkpointer(1))
 
-    winner = p.run(eval_genomes, 34)
-    with open("best.pickle", "wb") as f:
+    winner = p.run(eval_genomes, 50)
+    with open("secondBest.pickle", "wb") as f:
         pickle.dump(winner, f)
 
 

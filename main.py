@@ -967,7 +967,7 @@ def Play_Medium(net):
         river_input.append(0)
 
     bot = PLAYERS[player]
-    output = net.activate((check_hand(RIVER, bot.card1, bot.card2), bot.call, RIVER_CARD_COUNT))
+    output = net.activate((check_hand(RIVER, bot.card1, bot.card2), bot.call, RIVER_CARD_COUNT, POT_AMT))
     Update_Game_Screen()
     if not has_dealt_cards:
         deal_cards()

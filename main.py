@@ -427,7 +427,72 @@ def handle_bot_train_move(decision, amt):
         increment_player()
         return "Raise"    
 
+def handle_bot_move_hard():
+    global POT_AMT
+    global PLAYERS_FOLDED
+    global CHECK_COUNT
+    global PLAYERS
+    if not has_done_small_blind:
+        small_blind()
+        return "Raise"
+    elif not has_done_big_blind:
+        big_blind()
+        return "Raise"
+    action = None
+    max_score = check_hand(RIVER, PLAYERS[player].card1, PLAYERS[player].card2)
+    decision = 1
+    for plyr in PLAYERS:
+        score = check_hand(RIVER, plyr.card1, plyr.card2)
+        if score>max_score:
+            decision = 0
+    if decision ==1:
+        action = 9
+    elif decision == 0:
+        if PLAYERS[player].call ==0:
+            action = 5
+        else:
+            action = 1
+    
+    
 
+    if action < 2:
+        PLAYERS[player].set_folded(True)
+        PLAYERS[player].set_has_cards(False)
+        fold_text = PLAYER_MOVE_FONT.render("Folded", 1, BLUE)
+        PLAYERS_FOLDED += 1
+        PLAYERS[player].set_last_move("Folded")
+        increment_player()
+        #Fold_sound.play()
+        return "Fold"
+    elif action < 9:
+        if PLAYERS[player].call == 0:
+            PLAYERS[player].set_last_move("Checked")
+            CHECK_COUNT += 1
+            #Check_sound.play()
+            increment_player()
+            return "Check"
+        else:
+            PLAYERS[player].set_last_move("Called $" + str(PLAYERS[player].call))
+            POT_AMT += PLAYERS[player].call
+            PLAYERS[player].set_money(-PLAYERS[player].call)
+            PLAYERS[player].set_call(0)
+            #Poker_chip_sound.play()
+            CHECK_COUNT += 1
+            increment_player()
+            return "Call"
+    elif action < 10:
+        bet = 9999999999
+        while PLAYERS[player].money - bet - PLAYERS[player].call < 0:
+            bet = int(1.03 ** (random.random() * 145))
+        PLAYERS[player].set_last_move("Raised $" + str(bet))
+        POT_AMT += bet + PLAYERS[player].call
+        CHECK_COUNT = 1
+        PLAYERS[player].set_money(-(bet + PLAYERS[player].call))
+        set_calls(player, bet)
+        PLAYERS[player].set_call(0)
+        #Poker_chip_sound.play()
+        increment_player()
+        return "Raise"
 def handle_bot_move():
     global POT_AMT
     global PLAYERS_FOLDED
@@ -951,6 +1016,61 @@ def Play_train():
         
 
     pygame.display.update()
+def Play_Hard():
+    
+    global PLAYERS
+    global POT_AMT
+    global cards
+    global RIVER_CARD_COUNT
+    global RIVER
+    global player
+    Update_Game_Screen()
+    if not has_dealt_cards:
+        deal_cards()
+
+    elif player == 4 and not PLAYERS[-1].folded:
+        if not has_done_small_blind:
+            small_blind()
+            Poker_chip_sound.play()
+            pygame.time.delay(1000)
+        elif not has_done_big_blind:
+            big_blind()
+            Poker_chip_sound.play()
+            pygame.time.delay(1000)
+        elif is_Raising:
+            handle_isRaising()
+        else:
+            handle_buttons()
+    else:
+
+        if PLAYERS[player].folded:
+            increment_player()
+        else:
+            move = handle_bot_move_hard()
+            pygame.display.update()
+            pygame.time.delay(1000)
+            if move == "Fold":
+                Fold_sound.play()
+                pygame.time.delay(1000)
+                pass
+            elif move == "Check":
+                pass
+                Check_sound.play()
+            elif move == "Raise" or move == "Call":
+                pass
+                Poker_chip_sound.play()
+    if len(RIVER) == 0 and CHECK_COUNT == 5 - PLAYERS_FOLDED:
+        deal_flop()
+    if check_win() !=-1:
+        reset_game()
+    if check_Checks():
+        player = SMALl_BLIND
+        RIVER.append(cards[0][0])
+        cards[0].remove(cards[0][0])
+        RIVER_CARD_COUNT += 1
+        #Card_flip_sound.play()
+
+    pygame.display.update()
 
 def Play_Medium(net):
     global PLAYERS
@@ -1143,10 +1263,10 @@ def main(net):
                 Is_Playing = True
                
             elif event.type == PLAY_HARD:
-                pygame.event.post(pygame.event.Event(PLAY_EASY))
+                pygame.event.post(pygame.event.Event(PLAY_HARD))
 
                 Is_Playing = True
-                Play_Easy()
+                Play_Hard()
 
         if not Is_Playing:
             handle_Arrows(MODES)
@@ -1162,7 +1282,7 @@ if __name__ == "__main__":
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          config_path)
-    with open("secondBest.pickle", "rb") as f:
+    with open("thirdbest.pickle", "rb") as f:
         winner = pickle.load(f)
     winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
     main(winner_net)

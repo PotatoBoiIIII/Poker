@@ -68,6 +68,10 @@ def bot_move(genome, net, player):
     decision = output.index(max(output[:-1]))
     if decision ==0 and main.check_hand(main.RIVER, bot.card1, bot.card2)<46 and bot.call!=0:
         genome.fitness+=10
+    if decision == 0 and main.check_hand(main.RIVER, bot.card1, bot.card2 )>52 :
+        genome.fitness-=10
+    if decision == 0 and bot.call ==0:
+        genome.fitness-=5
     elif decision == 2 and output[3]<6:
         genome.fitness-=1
 
@@ -132,15 +136,15 @@ def eval_genomes(genomes, config):
                         
 
 def run_neat(config):
-    #p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-30')
+    #p = neat.Checkpointer.restore_checkpoint('check_points/neat-checkpoint-47')
     p = neat.Population(config)
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats) 
     p.add_reporter(neat.Checkpointer(1))
 
-    winner = p.run(eval_genomes, 50)
-    with open("secondBest.pickle", "wb") as f:
+    winner = p.run(eval_genomes, 60)
+    with open("thirdbest.pickle", "wb") as f:
         pickle.dump(winner, f)
 
 

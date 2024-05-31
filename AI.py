@@ -135,8 +135,8 @@ def eval_genomes(genomes, config):
                         
 
 def run_neat(config):
-    #p = neat.Checkpointer.restore_checkpoint('check_points/neat-checkpoint-47')
-    p = neat.Population(config)
+    p = neat.Checkpointer.restore_checkpoint('check_points/neat-checkpoint-13')
+    #p = neat.Population(config)
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats) 

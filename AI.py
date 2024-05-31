@@ -22,7 +22,6 @@ def train_ai(genome1, genome2, genome3, genome4, genome5, config):
     net5 = neat.nn.FeedForwardNetwork.create(genome5, config)
     
 
-    negative = False
 
     while run:
         for event in pygame.event.get():

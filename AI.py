@@ -22,6 +22,7 @@ def train_ai(genome1, genome2, genome3, genome4, genome5, config):
     net5 = neat.nn.FeedForwardNetwork.create(genome5, config)
     
 
+    negative = False
 
     while run:
         for event in pygame.event.get():
@@ -135,14 +136,14 @@ def eval_genomes(genomes, config):
                         
 
 def run_neat(config):
-    p = neat.Checkpointer.restore_checkpoint('check_points/neat-checkpoint-13')
+    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-64')
     #p = neat.Population(config)
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats) 
     p.add_reporter(neat.Checkpointer(1))
 
-    winner = p.run(eval_genomes, 60)
+    winner = p.run(eval_genomes, 1)
     with open("thirdbest.pickle", "wb") as f:
         pickle.dump(winner, f)
 

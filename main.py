@@ -200,8 +200,8 @@ PLAYERS_FOLDED = 0
 CHECK_COUNT = 0
 RIVER = []
 is_a_tie = False
-SMALl_BLIND = 3
-player = 3
+SMALl_BLIND = 2
+player = 2
 has_done_small_blind = False
 has_done_big_blind = False
 

@@ -1,1 +1,1 @@
-Poker game. For now, the bots' moves are completely random, with a 20% of folding, 70% chance of checking/calling depending on the situation, and 10% of raising. 
+Poker game. In easy mode, the bots' moves are completely random. In medium mode, bots use NEAT algorithm, although probably not trained long enough. In hard mode, bots just know what cards the player has. 
